@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Attendance Scanner</title>
+
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #2563eb;
+            color: white;
+            padding: 22px 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            margin: 25px auto;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-card h2 {
+            font-size: 30px;
+            color: #2563eb;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #111827;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .scanner-status {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .manual-section {
+            margin-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+
+        .manual-section h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .primary-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .success-btn {
+            background: #16a34a;
+            color: white;
+        }
+
+        .danger-btn {
+            background: #dc2626;
+            color: white;
+        }
+
+        .secondary-btn {
+            background: #6b7280;
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .message {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .message.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .message.info {
+            display: block;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .present {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .time-out {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280;
+        }
+
+        .date-display {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .student-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .student-info strong {
+            color: #111827;
+        }
+
+        footer {
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+            padding: 25px;
+        }
+
+        @media (max-width: 800px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>📋 Student Attendance System</h1>
+    <p>Automated QR Code Attendance Scanner</p>
+</header>
+
+<div class="container">
+
+    <!-- Dashboard -->
+    <div class="dashboard">
+
+        <div class="stat-card">
+            <h2 id="totalStudents">0</h2>
+            <p>Students Scanned Today</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="timeInCount">0</h2>
+            <p>Time In</p>
+        </div>
+
+        <div class="stat-card">
+            <h2 id="timeOutCount">0</h2>
+            <p>Time Out</p>
+        </div>
+
+    </div>
+
+
+    <div class="main-grid">
+
+        <!-- Scanner -->
+        <div class="card">
+
+            <h2>📷 Scan Student QR Code</h2>
+
+            <div id="reader"></div>
+
+            <div class="scanner-status" id="scannerStatus">
+                Camera scanner is ready.
+            </div>
+
+            <div class="manual-section">
+
+                <h3>Or Enter Student ID Manually</h3>
+
+                <div class="input-group">
+                    <input
+                        type="text"
+                        id="studentIdInput"
+                        placeholder="Enter Student ID"
+                    >
+
+                    <button
+                        class="primary-btn"
+                        onclick="processManualID()"
+                    >
+                        Submit
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="message" class="message"></div>
+
+            <div id="studentInfo" class="student-info"></div>
+
+        </div>
+
+
+        <!-- Controls -->
+        <div class="card">
+
+            <h2>⚙️ Attendance Controls</h2>
+
+            <div class="date-display">
+                <strong>Today:</strong>
+                <span id="currentDate"></span>
+            </div>
+
+            <div class="action-buttons">
+
+                <button
+                    class="success-btn"
+                    onclick="setAttendanceMode('TIME IN')"
+                >
+                    🟢 Time In Mode
+                </button>
+
+                <button
+                    class="primary-btn"
+                    onclick="setAttendanceMode('TIME OUT')"
+                >
+                    🔵 Time Out Mode
+                </button>
+
+            </div>
+
+            <div
+                id="modeDisplay"
+                class="message info"
+                style="display:block; margin-top:15px;"
+            >
+                Current Mode: TIME IN
+            </div>
+
+            <div class="action-buttons">
+
+                <button
+                    class="primary-btn"
+                    onclick="exportCSV()"
+                >
+                    📥 Export CSV
+                </button>
+
+                <button
+                    class="danger-btn"
+                    onclick="clearAttendance()"
+                >
+                    🗑️ Clear Records
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Attendance Records -->
+    <div class="card">
+
+        <h2>📊 Today's Attendance</h2>
+
+        <div style="margin-bottom:15px;">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="🔎 Search Student ID..."
+                oninput="displayAttendance()"
+                style="width:100%;"
+            >
+        </div>
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Student ID</th>
+                        <th>Date</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Status</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="attendanceTable">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer>
+    Automated Student Attendance System
+</footer>
+
+
+<script>
+
+    /*
+    ============================================================
+       ATTENDANCE SYSTEM
+    ============================================================
+    */
+
+    let attendanceMode = "TIME IN";
+
+    let attendanceRecords =
+        JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+
+
+    /*
+    ------------------------------------------------------------
+       DATE AND TIME
+    ------------------------------------------------------------
+    */
+
+    function getToday() {
+
+        const now = new Date();
+
+        const year = now.getFullYear();
+
+        const month =
+            String(now.getMonth() + 1).padStart(2, "0");
+
+        const day =
+            String(now.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    }
+
+
+    function getCurrentTime() {
+
+        const now = new Date();
+
+        return now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+
+    }
+
+
+    function getDisplayDate() {
+
+        const now = new Date();
+
+        return now.toLocaleDateString([], {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+
+    }
+
+
+    document.getElementById("currentDate").textContent =
+        getDisplayDate();
+
+
+    /*
+    ------------------------------------------------------------
+       ATTENDANCE MODE
+    ------------------------------------------------------------
+    */
+
+    function setAttendanceMode(mode) {
+
+        attendanceMode = mode;
+
+        document.getElementById("modeDisplay").textContent =
+            "Current Mode: " + mode;
+
+        showMessage(
+            "Attendance mode changed to " + mode,
+            "info"
+        );
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       PROCESS STUDENT ID
+    ------------------------------------------------------------
+    */
+
+    function processStudent(studentId) {
+
+        if (!studentId) {
+
+            showMessage(
+                "Please enter a valid Student ID.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        studentId = studentId.trim();
+
+
+        const today = getToday();
+
+        const currentTime = getCurrentTime();
+
+
+        /*
+        Find today's attendance record
+        for this student.
+        */
+
+        let record = attendanceRecords.find(
+            r =>
+                r.studentId === studentId &&
+                r.date === today
+        );
+
+
+        /*
+        ========================================================
+           TIME IN
+        ========================================================
+        */
+
+        if (attendanceMode === "TIME IN") {
+
+            if (record) {
+
+                showMessage(
+                    "Student " +
+                    studentId +
+                    " has already timed in today.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            record = {
+
+                studentId: studentId,
+
+                date: today,
+
+                timeIn: currentTime,
+
+                timeOut: "",
+
+                status: "PRESENT"
+
+            };
+
+
+            attendanceRecords.push(record);
+
+
+            saveRecords();
+
+            displayAttendance();
+
+            showStudentInfo(
+                studentId,
+                "Time In recorded at " + currentTime
+            );
+
+
+            showMessage(
+                "✓ Attendance recorded successfully for " +
+                studentId,
+                "success"
+            );
+
+        }
+
+
+        /*
+        ========================================================
+           TIME OUT
+        ========================================================
+        */
+
+        else if (attendanceMode === "TIME OUT") {
+
+            if (!record) {
+
+                showMessage(
+                    "No Time In record found for Student ID " +
+                    studentId +
+                    ".",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            if (record.timeOut) {
+
+                showMessage(
+                    "Student " +
+                    studentId +
+                    " has already timed out.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            record.timeOut = currentTime;
+
+            record.status = "COMPLETED";
+
+
+            saveRecords();
+
+            displayAttendance();
+
+
+            showStudentInfo(
+                studentId,
+                "Time Out recorded at " + currentTime
+            );
+
+
+            showMessage(
+                "✓ Time Out recorded successfully for " +
+                studentId,
+                "success"
+            );
+
+        }
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       MANUAL ID
+    ------------------------------------------------------------
+    */
+
+    function processManualID() {
+
+        const input =
+            document.getElementById("studentIdInput");
+
+        const studentId = input.value.trim();
+
+
+        if (!studentId) {
+
+            showMessage(
+                "Please enter a Student ID.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        processStudent(studentId);
+
+        input.value = "";
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       ENTER KEY FOR MANUAL ID
+    ------------------------------------------------------------
+    */
+
+    document
+        .getElementById("studentIdInput")
+        .addEventListener("keydown", function(event) {
+
+            if (event.key === "Enter") {
+
+                processManualID();
+
+            }
+
+        });
+
+
+    /*
+    ------------------------------------------------------------
+       QR CODE SCANNER
+    ------------------------------------------------------------
+    */
+
+    let lastScannedCode = "";
+
+    let lastScanTime = 0;
+
+
+    function onScanSuccess(decodedText, decodedResult) {
+
+        const now = Date.now();
+
+
+        /*
+        Prevent the same QR code
+        from being scanned repeatedly
+        within 3 seconds.
+        */
+
+        if (
+            decodedText === lastScannedCode &&
+            now - lastScanTime < 3000
+        ) {
+
+            return;
+
+        }
+
+
+        lastScannedCode = decodedText;
+
+        lastScanTime = now;
+
+
+        processStudent(decodedText);
+
+    }
+
+
+    function onScanFailure(error) {
+
+        /*
+        Ignore continuous scanner errors.
+        The scanner naturally produces these
+        while searching for a QR code.
+        */
+
+    }
+
+
+    const html5QrCodeScanner =
+        new Html5QrcodeScanner(
+
+            "reader",
+
+            {
+
+                fps: 10,
+
+                qrbox: {
+                    width: 250,
+                    height: 250
+                },
+
+                rememberLastUsedCamera: true,
+
+                supportedScanTypes: [
+                    Html5QrcodeScanType.SCAN_TYPE_CAMERA
+                ]
+
+            },
+
+            false
+
+        );
+
+
+    html5QrCodeScanner.render(
+        onScanSuccess,
+        onScanFailure
+    );
+
+
+    /*
+    ------------------------------------------------------------
+       SAVE RECORDS
+    ------------------------------------------------------------
+    */
+
+    function saveRecords() {
+
+        localStorage.setItem(
+            "attendanceRecords",
+            JSON.stringify(attendanceRecords)
+        );
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       DISPLAY ATTENDANCE TABLE
+    ------------------------------------------------------------
+    */
+
+    function displayAttendance() {
+
+        const table =
+            document.getElementById("attendanceTable");
+
+
+        const search =
+            document
+                .getElementById("searchInput")
+                .value
+                .toLowerCase();
+
+
+        const today =
+            getToday();
+
+
+        const todayRecords =
+            attendanceRecords.filter(
+                record =>
+                    record.date === today
+            );
+
+
+        const filteredRecords =
+            todayRecords.filter(
+                record =>
+                    record.studentId
+                        .toLowerCase()
+                        .includes(search)
+            );
+
+
+        table.innerHTML = "";
+
+
+        if (filteredRecords.length === 0) {
+
+            table.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        No attendance records found.
+                    </td>
+                </tr>
+            `;
+
+        }
+
+
+        filteredRecords.forEach(
+            (record, index) => {
+
+                const row =
+                    document.createElement("tr");
+
+
+                const statusClass =
+                    record.timeOut
+                        ? "time-out"
+                        : "present";
+
+
+                row.innerHTML = `
+
+                    <td>${index + 1}</td>
+
+                    <td>
+                        <strong>
+                            ${escapeHTML(record.studentId)}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${record.date}
+                    </td>
+
+                    <td>
+                        ${record.timeIn || "-"}
+                    </td>
+
+                    <td>
+                        ${record.timeOut || "-"}
+                    </td>
+
+                    <td>
+                        <span class="status-badge ${statusClass}">
+                            ${record.timeOut
+                                ? "COMPLETED"
+                                : "PRESENT"}
+                        </span>
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            }
+        );
+
+
+        updateStatistics();
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       UPDATE DASHBOARD
+    ------------------------------------------------------------
+    */
+
+    function updateStatistics() {
+
+        const today =
+            getToday();
+
+
+        const todayRecords =
+            attendanceRecords.filter(
+                record =>
+                    record.date === today
+            );
+
+
+        const timeIn =
+            todayRecords.filter(
+                record =>
+                    record.timeIn
+            ).length;
+
+
+        const timeOut =
+            todayRecords.filter(
+                record =>
+                    record.timeOut
+            ).length;
+
+
+        document.getElementById(
+            "totalStudents"
+        ).textContent =
+            todayRecords.length;
+
+
+        document.getElementById(
+            "timeInCount"
+        ).textContent =
+            timeIn;
+
+
+        document.getElementById(
+            "timeOutCount"
+        ).textContent =
+            timeOut;
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       SHOW MESSAGE
+    ------------------------------------------------------------
+    */
+
+    function showMessage(text, type) {
+
+        const message =
+            document.getElementById("message");
+
+
+        message.textContent = text;
+
+        message.className =
+            "message " + type;
+
+
+        setTimeout(() => {
+
+            message.className = "message";
+
+        }, 4000);
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       SHOW STUDENT INFORMATION
+    ------------------------------------------------------------
+    */
+
+    function showStudentInfo(studentId, message) {
+
+        const info =
+            document.getElementById("studentInfo");
+
+
+        info.innerHTML = `
+
+            <strong>Student ID:</strong>
+            ${escapeHTML(studentId)}
+            <br><br>
+
+            <strong>Record:</strong>
+            ${escapeHTML(message)}
+
+        `;
+
+
+        info.style.display = "block";
+
+
+        setTimeout(() => {
+
+            info.style.display = "none";
+
+        }, 5000);
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       ESCAPE HTML
+    ------------------------------------------------------------
+    */
+
+    function escapeHTML(value) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent = value;
+
+        return div.innerHTML;
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       EXPORT CSV
+    ------------------------------------------------------------
+    */
+
+    function exportCSV() {
+
+        const today =
+            getToday();
+
+
+        const records =
+            attendanceRecords.filter(
+                record =>
+                    record.date === today
+            );
+
+
+        if (records.length === 0) {
+
+            showMessage(
+                "There are no attendance records to export.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        let csv =
+            "Student ID,Date,Time In,Time Out,Status\n";
+
+
+        records.forEach(record => {
+
+            csv +=
+                `"${record.studentId}",` +
+                `"${record.date}",` +
+                `"${record.timeIn}",` +
+                `"${record.timeOut}",` +
+                `"${record.status}"\n`;
+
+        });
+
+
+        const blob =
+            new Blob(
+                [csv],
+                { type: "text/csv;charset=utf-8;" }
+            );
+
+
+        const url =
+            URL.createObjectURL(blob);
+
+
+        const link =
+            document.createElement("a");
+
+
+        link.href = url;
+
+        link.download =
+            "attendance-" + today + ".csv";
+
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+
+        showMessage(
+            "✓ Attendance CSV exported successfully.",
+            "success"
+        );
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       CLEAR ATTENDANCE
+    ------------------------------------------------------------
+    */
+
+    function clearAttendance() {
+
+        const confirmation =
+            confirm(
+                "Are you sure you want to delete today's attendance records?\n\n" +
+                "This action cannot be undone."
+            );
+
+
+        if (!confirmation) {
+
+            return;
+
+        }
+
+
+        const today =
+            getToday();
+
+
+        attendanceRecords =
+            attendanceRecords.filter(
+                record =>
+                    record.date !== today
+            );
+
+
+        saveRecords();
+
+        displayAttendance();
+
+
+        showMessage(
+            "Today's attendance records have been cleared.",
+            "success"
+        );
+
+    }
+
+
+    /*
+    ------------------------------------------------------------
+       INITIAL DISPLAY
+    ------------------------------------------------------------
+    */
+
+    displayAttendance();
+
+</script>
+
+</body>
+</html>
