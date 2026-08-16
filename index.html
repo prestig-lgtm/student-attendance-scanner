@@ -699,28 +699,18 @@ const SCRIPT_URL =
 ================================================================
 */
 
-let attendanceMode =
-    "TIME IN";
-
+let attendanceMode = "TIME IN";
 
 let attendanceRecords =
     JSON.parse(
-        localStorage.getItem(
-            "attendanceRecords"
-        )
+        localStorage.getItem("attendanceRecords")
     ) || [];
 
+let lastScannedCode = "";
 
-let lastScannedCode =
-    "";
+let lastScanTime = 0;
 
-
-let lastScanTime =
-    0;
-
-
-let isProcessing =
-    false;
+let isProcessing = false;
 
 
 /*
@@ -729,23 +719,15 @@ let isProcessing =
 ================================================================
 */
 
-let audioContext =
-    null;
+let audioContext = null;
 
-
-let soundEnabled =
-    false;
+let soundEnabled = false;
 
 
 /*
 ================================================================
  ENABLE SOUND
 ================================================================
-
-This function is called by the visible button.
-
-Because the user directly clicks the button,
-the browser allows audio playback.
 */
 
 function enableSound() {
@@ -756,7 +738,6 @@ function enableSound() {
             window.AudioContext ||
             window.webkitAudioContext;
 
-
         if (!AudioContext) {
 
             document.getElementById(
@@ -765,9 +746,7 @@ function enableSound() {
                 "Audio is not supported by this browser.";
 
             return;
-
         }
-
 
         if (!audioContext) {
 
@@ -776,50 +755,38 @@ function enableSound() {
 
         }
 
-
         if (
-            audioContext.state ===
-            "suspended"
+            audioContext.state === "suspended"
         ) {
 
             audioContext.resume();
 
         }
 
-
-        soundEnabled =
-            true;
-
+        soundEnabled = true;
 
         const button =
             document.getElementById(
                 "soundButton"
             );
 
-
         button.textContent =
             "🔊 SOUND ENABLED";
-
 
         button.classList.add(
             "enabled"
         );
-
 
         document.getElementById(
             "soundStatus"
         ).textContent =
             "Sound is enabled. You can now scan QR codes.";
 
-
         /*
-        --------------------------------------------------------
-        PLAY A SHORT TEST SOUND
-        --------------------------------------------------------
+        Test beep
         */
 
         playSuccessSound();
-
 
     } catch (error) {
 
@@ -827,7 +794,6 @@ function enableSound() {
             "Unable to enable audio:",
             error
         );
-
 
         document.getElementById(
             "soundStatus"
@@ -844,7 +810,13 @@ function enableSound() {
  SUCCESS SOUND
 ================================================================
 
-Two rising tones.
+LOUD GROCERY-STORE / BARCODE-SCANNER STYLE BEEP
+
+Short
+Sharp
+Loud
+High-pitched
+================================================================
 */
 
 function playSuccessSound() {
@@ -853,23 +825,19 @@ function playSuccessSound() {
         return;
     }
 
-
     try {
 
         if (!audioContext) {
             return;
         }
 
-
         if (
-            audioContext.state ===
-            "suspended"
+            audioContext.state === "suspended"
         ) {
 
             audioContext.resume();
 
         }
-
 
         const now =
             audioContext.currentTime;
@@ -893,29 +861,37 @@ function playSuccessSound() {
         );
 
 
+        /*
+        Scanner-like tone
+        */
+
         oscillator.type =
-            "sine";
+            "square";
 
 
         /*
-        First tone
+        High initial pitch
         */
 
         oscillator.frequency.setValueAtTime(
-            880,
+            1500,
             now
         );
 
 
         /*
-        Second higher tone
+        Quick downward pitch
         */
 
-        oscillator.frequency.setValueAtTime(
-            1174.66,
-            now + 0.12
+        oscillator.frequency.exponentialRampToValueAtTime(
+            1100,
+            now + 0.08
         );
 
+
+        /*
+        LOUD ATTACK
+        */
 
         gainNode.gain.setValueAtTime(
             0.0001,
@@ -924,14 +900,18 @@ function playSuccessSound() {
 
 
         gainNode.gain.exponentialRampToValueAtTime(
-            0.25,
-            now + 0.02
+            0.8,
+            now + 0.005
         );
 
 
+        /*
+        Very short release
+        */
+
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
-            now + 0.30
+            now + 0.12
         );
 
 
@@ -941,9 +921,8 @@ function playSuccessSound() {
 
 
         oscillator.stop(
-            now + 0.32
+            now + 0.13
         );
-
 
     } catch (error) {
 
@@ -961,8 +940,6 @@ function playSuccessSound() {
 ================================================================
  ERROR SOUND
 ================================================================
-
-One lower beep.
 */
 
 function playErrorSound() {
@@ -971,23 +948,19 @@ function playErrorSound() {
         return;
     }
 
-
     try {
 
         if (!audioContext) {
             return;
         }
 
-
         if (
-            audioContext.state ===
-            "suspended"
+            audioContext.state === "suspended"
         ) {
 
             audioContext.resume();
 
         }
-
 
         const now =
             audioContext.currentTime;
@@ -1012,11 +985,11 @@ function playErrorSound() {
 
 
         oscillator.type =
-            "sine";
+            "square";
 
 
         oscillator.frequency.setValueAtTime(
-            300,
+            350,
             now
         );
 
@@ -1028,14 +1001,14 @@ function playErrorSound() {
 
 
         gainNode.gain.exponentialRampToValueAtTime(
-            0.22,
-            now + 0.02
+            0.6,
+            now + 0.005
         );
 
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
-            now + 0.22
+            now + 0.20
         );
 
 
@@ -1045,9 +1018,8 @@ function playErrorSound() {
 
 
         oscillator.stop(
-            now + 0.24
+            now + 0.21
         );
-
 
     } catch (error) {
 
@@ -1072,10 +1044,8 @@ function getToday() {
     const now =
         new Date();
 
-
     const year =
         now.getFullYear();
-
 
     const month =
         String(
@@ -1085,7 +1055,6 @@ function getToday() {
             "0"
         );
 
-
     const day =
         String(
             now.getDate()
@@ -1093,7 +1062,6 @@ function getToday() {
             2,
             "0"
         );
-
 
     return (
         year +
@@ -1117,7 +1085,6 @@ function getCurrentTime() {
     const now =
         new Date();
 
-
     return now.toLocaleTimeString(
         [],
         {
@@ -1140,7 +1107,6 @@ function getDisplayDate() {
 
     const now =
         new Date();
-
 
     return now.toLocaleDateString(
         [],
@@ -1166,20 +1132,16 @@ document.getElementById(
 ================================================================
 */
 
-function setAttendanceMode(
-    mode
-) {
+function setAttendanceMode(mode) {
 
     attendanceMode =
         mode;
-
 
     document.getElementById(
         "modeDisplay"
     ).textContent =
         "Current Mode: " +
         mode;
-
 
     showMessage(
         "Attendance mode changed to " +
@@ -1203,20 +1165,13 @@ async function sendAttendanceToSheet(
     if (isProcessing) {
 
         return {
-
             success: false,
-
-            message:
-                "Please wait."
-
+            message: "Please wait."
         };
 
     }
 
-
-    isProcessing =
-        true;
-
+    isProcessing = true;
 
     try {
 
@@ -1234,10 +1189,8 @@ async function sendAttendanceToSheet(
                     method: "POST",
 
                     headers: {
-
                         "Content-Type":
                             "text/plain;charset=utf-8"
-
                     },
 
                     body:
@@ -1259,20 +1212,11 @@ async function sendAttendanceToSheet(
             await response.json();
 
 
-        /*
-        ========================================================
-        SUCCESS
-        ========================================================
-        */
-
-        if (
-            result.success
-        ) {
+        if (result.success) {
 
             /*
-            IMPORTANT:
-            Sound happens only after
-            Google Sheets confirms success.
+            LOUD SUCCESS BEEP
+            AFTER SERVER CONFIRMS SUCCESS
             */
 
             playSuccessSound();
@@ -1283,16 +1227,7 @@ async function sendAttendanceToSheet(
                 "success"
             );
 
-        }
-
-
-        /*
-        ========================================================
-        ERROR
-        ========================================================
-        */
-
-        else {
+        } else {
 
             playErrorSound();
 
@@ -1334,11 +1269,9 @@ async function sendAttendanceToSheet(
 
         };
 
-
     } finally {
 
-        isProcessing =
-            false;
+        isProcessing = false;
 
     }
 
@@ -1359,12 +1292,10 @@ async function processStudent(
 
         playErrorSound();
 
-
         showMessage(
             "Please enter a valid Student ID.",
             "error"
         );
-
 
         return;
 
@@ -1375,35 +1306,18 @@ async function processStudent(
         studentId.trim();
 
 
-    /*
-    Send to Google Sheets.
-    */
-
     const result =
         await sendAttendanceToSheet(
             studentId
         );
 
 
-    /*
-    If Google Sheets rejects it,
-    do not create local record.
-    */
-
-    if (
-        !result.success
-    ) {
+    if (!result.success) {
 
         return;
 
     }
 
-
-    /*
-    ==========================================================
-    LOCAL DISPLAY RECORD
-    ==========================================================
-    */
 
     const today =
         getToday();
@@ -1430,10 +1344,8 @@ async function processStudent(
     */
 
     if (
-        attendanceMode ===
-        "TIME IN"
+        attendanceMode === "TIME IN"
     ) {
-
 
         if (!record) {
 
@@ -1463,11 +1375,6 @@ async function processStudent(
 
         }
 
-
-        /*
-        COMPLETED only when BOTH
-        Time In and Time Out exist.
-        */
 
         if (
             record.timeIn &&
@@ -1501,21 +1408,14 @@ async function processStudent(
     */
 
     else if (
-        attendanceMode ===
-        "TIME OUT"
+        attendanceMode === "TIME OUT"
     ) {
-
 
         if (record) {
 
             record.timeOut =
                 currentTime;
 
-
-            /*
-            Both Time In and Time Out
-            are now filled.
-            */
 
             if (
                 record.timeIn &&
@@ -1610,8 +1510,7 @@ document
         function(event) {
 
             if (
-                event.key ===
-                "Enter"
+                event.key === "Enter"
             ) {
 
                 processManualID();
@@ -1638,7 +1537,7 @@ function onScanSuccess(
 
 
     /*
-    Prevent duplicate scans
+    Prevent duplicate scan
     within 3 seconds.
     */
 
@@ -1655,14 +1554,7 @@ function onScanSuccess(
     }
 
 
-    /*
-    Don't scan another student
-    while processing.
-    */
-
-    if (
-        isProcessing
-    ) {
+    if (isProcessing) {
 
         return;
 
@@ -1690,12 +1582,10 @@ function onScanSuccess(
 ================================================================
 */
 
-function onScanFailure(
-    error
-) {
+function onScanFailure(error) {
 
     /*
-    Normal QR detection errors
+    Normal scanner detection errors
     are ignored.
     */
 
@@ -1718,11 +1608,8 @@ const html5QrCodeScanner =
             fps: 10,
 
             qrbox: {
-
                 width: 250,
-
                 height: 250
-
             },
 
             rememberLastUsedCamera:
@@ -1750,7 +1637,7 @@ html5QrCodeScanner.render(
 
 /*
 ================================================================
- SAVE LOCAL RECORDS
+ LOCAL STORAGE
 ================================================================
 */
 
@@ -1827,9 +1714,7 @@ function displayAttendance() {
                     colspan="6"
                     class="empty-state"
                 >
-
                     No attendance records found.
-
                 </td>
 
             </tr>
@@ -1850,11 +1735,6 @@ function displayAttendance() {
                     "tr"
                 );
 
-
-            /*
-            COMPLETED only when
-            both fields are filled.
-            */
 
             const completed =
                 record.timeIn &&
@@ -1906,9 +1786,7 @@ function displayAttendance() {
                     <span
                         class="status-badge ${statusClass}"
                     >
-
                         ${statusText}
-
                     </span>
 
                 </td>
@@ -2151,7 +2029,6 @@ function exportCSV() {
         record => {
 
             csv +=
-
                 `"${record.studentId}",` +
                 `"${record.date}",` +
                 `"${record.timeIn}",` +
