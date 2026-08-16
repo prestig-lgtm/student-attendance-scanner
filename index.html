@@ -9,7 +9,10 @@
 
 <title>Student Attendance Scanner</title>
 
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script
+    src="https://unpkg.com/html5-qrcode"
+    type="text/javascript">
+</script>
 
 <style>
 
@@ -228,7 +231,7 @@ button:active {
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 650px;
+    min-width: 750px;
 }
 
 th,
@@ -264,6 +267,11 @@ tr:hover {
 .completed {
     background: #dbeafe;
     color: #1e40af;
+}
+
+.no-time-in {
+    background: #ffedd5;
+    color: #9a3412;
 }
 
 .empty-state {
@@ -314,7 +322,9 @@ footer {
 
 </head>
 
+
 <body>
+
 
 <header>
 
@@ -329,14 +339,22 @@ Automated QR Code Attendance Scanner
 </header>
 
 
+
 <div class="container">
 
 
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
 <div class="dashboard">
+
 
 <div class="stat-card">
 
-<h2 id="totalStudents">0</h2>
+<h2 id="totalStudents">
+0
+</h2>
 
 <p>
 Students Scanned Today
@@ -347,7 +365,9 @@ Students Scanned Today
 
 <div class="stat-card">
 
-<h2 id="timeInCount">0</h2>
+<h2 id="timeInCount">
+0
+</h2>
 
 <p>
 Time In
@@ -358,7 +378,9 @@ Time In
 
 <div class="stat-card">
 
-<h2 id="timeOutCount">0</h2>
+<h2 id="timeOutCount">
+0
+</h2>
 
 <p>
 Time Out
@@ -366,12 +388,22 @@ Time Out
 
 </div>
 
+
 </div>
 
 
 
+<!-- =====================================================
+     MAIN GRID
+===================================================== -->
+
 <div class="main-grid">
 
+
+
+<!-- =====================================================
+     SCANNER
+===================================================== -->
 
 <div class="card">
 
@@ -379,19 +411,28 @@ Time Out
 📷 Scan Student QR Code
 </h2>
 
+
 <div id="reader"></div>
 
+
 <div
-class="scanner-status"
-id="scannerStatus"
->
+    class="scanner-status"
+    id="scannerStatus">
+
 Camera scanner is ready.
+
 </div>
+
 
 <div class="connection-status">
+
 ● Attendance database connected
+
 </div>
 
+
+
+<!-- MANUAL ID -->
 
 <div class="manual-section">
 
@@ -399,40 +440,56 @@ Camera scanner is ready.
 Or Enter Student ID Manually
 </h3>
 
+
 <div class="input-group">
 
+
 <input
-type="text"
-id="studentIdInput"
-placeholder="Enter Student ID"
+    type="text"
+    id="studentIdInput"
+    placeholder="Enter Student ID"
 >
+
 
 <button
-class="primary-btn"
-onclick="processManualID()"
->
+    class="primary-btn"
+    onclick="processManualID()">
+
 Submit
+
 </button>
 
-</div>
 
 </div>
 
+</div>
+
+
+
+<!-- MESSAGE -->
 
 <div
-id="message"
-class="message"
-></div>
+    id="message"
+    class="message">
+</div>
 
+
+
+<!-- STUDENT INFO -->
 
 <div
-id="studentInfo"
-class="student-info"
-></div>
+    id="studentInfo"
+    class="student-info">
+</div>
+
 
 </div>
 
 
+
+<!-- =====================================================
+     CONTROLS
+===================================================== -->
 
 <div class="card">
 
@@ -447,82 +504,110 @@ class="student-info"
 Today:
 </strong>
 
-<span id="currentDate"></span>
+<span id="currentDate">
+</span>
 
 </div>
 
 
+
+<!-- MODE BUTTONS -->
+
 <div class="action-buttons">
 
+
 <button
-class="success-btn"
-onclick="setAttendanceMode('TIME IN')"
->
+    class="success-btn"
+    onclick="setAttendanceMode('TIME IN')">
+
 🟢 Time In Mode
+
 </button>
 
 
 <button
-class="primary-btn"
-onclick="setAttendanceMode('TIME OUT')"
->
+    class="primary-btn"
+    onclick="setAttendanceMode('TIME OUT')">
+
 🔵 Time Out Mode
+
 </button>
 
+
 </div>
 
+
+
+<!-- CURRENT MODE -->
 
 <div
-id="modeDisplay"
-class="message info"
-style="display:block; margin-top:15px;"
->
+    id="modeDisplay"
+    class="message info"
+    style="display:block; margin-top:15px;">
+
 Current Mode: TIME IN
+
 </div>
 
+
+
+<!-- CONTROL BUTTONS -->
 
 <div class="action-buttons">
 
+
 <button
-id="soundButton"
-class="primary-btn"
-onclick="enableSound()"
->
+    id="soundButton"
+    class="primary-btn"
+    onclick="enableSound()">
+
 🔊 ENABLE SOUND
+
 </button>
 
 
 <button
-class="primary-btn"
-onclick="exportCSV()"
->
+    class="primary-btn"
+    onclick="exportCSV()">
+
 📥 Export Local CSV
+
 </button>
 
 
 <button
-class="danger-btn"
-onclick="clearAttendance()"
->
+    class="danger-btn"
+    onclick="clearAttendance()">
+
 🗑️ Clear Local Records
+
 </button>
+
 
 </div>
+
 
 
 <div
-id="soundStatus"
-class="sound-status"
-style="margin-top:10px;"
->
+    id="soundStatus"
+    class="sound-status"
+    style="margin-top:10px;">
+
 Sound is disabled. Click Enable Sound before scanning.
-</div>
 
 </div>
 
+
 </div>
 
 
+</div>
+
+
+
+<!-- =====================================================
+     ATTENDANCE TABLE
+===================================================== -->
 
 <div class="card">
 
@@ -534,14 +619,14 @@ Sound is disabled. Click Enable Sound before scanning.
 <div style="margin-bottom:15px;">
 
 <input
-type="text"
-id="searchInput"
-placeholder="🔎 Search Student ID..."
-oninput="displayAttendance()"
-style="width:100%;"
->
+    type="text"
+    id="searchInput"
+    placeholder="🔎 Search Student ID..."
+    oninput="displayAttendance()"
+    style="width:100%;">
 
 </div>
+
 
 
 <div class="table-container">
@@ -552,24 +637,42 @@ style="width:100%;"
 
 <tr>
 
-<th>#</th>
+<th>
+#
+</th>
 
-<th>Student ID</th>
+<th>
+Student ID
+</th>
 
-<th>Date</th>
+<th>
+Date
+</th>
 
-<th>Time In</th>
+<th>
+Time In
+</th>
 
-<th>Time Out</th>
+<th>
+Time Out
+</th>
 
-<th>Status</th>
+<th>
+Late/No Time In
+</th>
+
+<th>
+Status
+</th>
 
 </tr>
 
 </thead>
 
+
 <tbody id="attendanceTable">
 </tbody>
+
 
 </table>
 
@@ -577,7 +680,9 @@ style="width:100%;"
 
 </div>
 
+
 </div>
+
 
 
 <footer>
@@ -604,28 +709,41 @@ const SCRIPT_URL =
    SYSTEM VARIABLES
 ===================================================== */
 
-let attendanceMode = "TIME IN";
+let attendanceMode =
+"TIME IN";
+
 
 let attendanceRecords =
 JSON.parse(
-localStorage.getItem("attendanceRecords")
+    localStorage.getItem(
+        "attendanceRecords"
+    )
 ) || [];
 
-let lastScannedCode = "";
 
-let lastScanTime = 0;
+let lastScannedCode =
+"";
 
-let isProcessing = false;
+
+let lastScanTime =
+0;
+
+
+let isProcessing =
+false;
 
 
 
 /* =====================================================
-   AUDIO VARIABLES
+   AUDIO
 ===================================================== */
 
-let audioContext = null;
+let audioContext =
+null;
 
-let soundEnabled = false;
+
+let soundEnabled =
+false;
 
 
 
@@ -638,8 +756,9 @@ function enableSound() {
     try {
 
         const AudioContext =
-        window.AudioContext ||
-        window.webkitAudioContext;
+            window.AudioContext ||
+            window.webkitAudioContext;
+
 
         if (!AudioContext) {
 
@@ -649,14 +768,17 @@ function enableSound() {
             "Audio is not supported by this browser.";
 
             return;
+
         }
+
 
         if (!audioContext) {
 
             audioContext =
-            new AudioContext();
+                new AudioContext();
 
         }
+
 
         if (
             audioContext.state ===
@@ -667,24 +789,35 @@ function enableSound() {
 
         }
 
-        soundEnabled = true;
+
+        soundEnabled =
+            true;
+
 
         const button =
-        document.getElementById(
-            "soundButton"
-        );
+            document.getElementById(
+                "soundButton"
+            );
+
 
         button.textContent =
-        "🔊 SOUND ENABLED";
+            "🔊 SOUND ENABLED";
+
 
         button.classList.add(
             "sound-enabled"
         );
 
+
         document.getElementById(
             "soundStatus"
         ).textContent =
-        "Sound enabled. Scanner beep is ready.";
+            "Sound enabled. Scanner beep is ready.";
+
+
+        /*
+         * Small test beep
+         */
 
         playScannerBeep();
 
@@ -705,9 +838,10 @@ function enableSound() {
 
 /* =====================================================
    SCANNER BEEP
-   HIGH PITCH: 2200 Hz
-   DURATION: 0.3 SECOND
-   VOLUME: 0.35
+   HIGH PITCH
+   2200 Hz
+   0.30 SECOND
+   VOLUME 0.35
 ===================================================== */
 
 function playScannerBeep() {
@@ -716,11 +850,13 @@ function playScannerBeep() {
         return;
     }
 
+
     try {
 
         if (!audioContext) {
             return;
         }
+
 
         if (
             audioContext.state ===
@@ -731,16 +867,17 @@ function playScannerBeep() {
 
         }
 
+
         const now =
-        audioContext.currentTime;
+            audioContext.currentTime;
 
 
         const oscillator =
-        audioContext.createOscillator();
+            audioContext.createOscillator();
 
 
         const gainNode =
-        audioContext.createGain();
+            audioContext.createGain();
 
 
         oscillator.connect(
@@ -754,7 +891,7 @@ function playScannerBeep() {
 
 
         oscillator.type =
-        "sine";
+            "sine";
 
 
         oscillator.frequency.setValueAtTime(
@@ -764,8 +901,8 @@ function playScannerBeep() {
 
 
         /*
-        Quick attack
-        */
+         * Start quietly
+         */
 
         gainNode.gain.setValueAtTime(
             0.0001,
@@ -774,8 +911,8 @@ function playScannerBeep() {
 
 
         /*
-        VOLUME = 0.35
-        */
+         * Volume = 0.35
+         */
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.35,
@@ -784,8 +921,8 @@ function playScannerBeep() {
 
 
         /*
-        Hold
-        */
+         * Hold
+         */
 
         gainNode.gain.setValueAtTime(
             0.35,
@@ -794,8 +931,8 @@ function playScannerBeep() {
 
 
         /*
-        Fade out
-        */
+         * Short fade
+         */
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
@@ -837,55 +974,68 @@ function playErrorSound() {
         return;
     }
 
+
     try {
 
         if (!audioContext) {
             return;
         }
 
+
         const now =
-        audioContext.currentTime;
+            audioContext.currentTime;
+
 
         const oscillator =
-        audioContext.createOscillator();
+            audioContext.createOscillator();
+
 
         const gainNode =
-        audioContext.createGain();
+            audioContext.createGain();
+
 
         oscillator.connect(
             gainNode
         );
 
+
         gainNode.connect(
             audioContext.destination
         );
 
+
         oscillator.type =
-        "square";
+            "square";
+
 
         oscillator.frequency.setValueAtTime(
             350,
             now
         );
 
+
         gainNode.gain.setValueAtTime(
             0.0001,
             now
         );
 
+
         gainNode.gain.exponentialRampToValueAtTime(
-            0.45,
+            0.35,
             now + 0.01
         );
+
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
             now + 0.25
         );
 
+
         oscillator.start(
             now
         );
+
 
         oscillator.stop(
             now + 0.25
@@ -907,26 +1057,36 @@ function playErrorSound() {
 
 
 /* =====================================================
-   DATE
+   TODAY
 ===================================================== */
 
 function getToday() {
 
     const now =
-    new Date();
+        new Date();
+
 
     const year =
-    now.getFullYear();
+        now.getFullYear();
+
 
     const month =
-    String(
-        now.getMonth() + 1
-    ).padStart(2, "0");
+        String(
+            now.getMonth() + 1
+        ).padStart(
+            2,
+            "0"
+        );
+
 
     const day =
-    String(
-        now.getDate()
-    ).padStart(2, "0");
+        String(
+            now.getDate()
+        ).padStart(
+            2,
+            "0"
+        );
+
 
     return (
         year +
@@ -947,7 +1107,8 @@ function getToday() {
 function getCurrentTime() {
 
     const now =
-    new Date();
+        new Date();
+
 
     return now.toLocaleTimeString(
         [],
@@ -969,7 +1130,8 @@ function getCurrentTime() {
 function getDisplayDate() {
 
     const now =
-    new Date();
+        new Date();
+
 
     return now.toLocaleDateString(
         [],
@@ -986,24 +1148,28 @@ function getDisplayDate() {
 document.getElementById(
     "currentDate"
 ).textContent =
-getDisplayDate();
+    getDisplayDate();
 
 
 
 /* =====================================================
-   ATTENDANCE MODE
+   SET MODE
 ===================================================== */
 
-function setAttendanceMode(mode) {
+function setAttendanceMode(
+    mode
+) {
 
     attendanceMode =
-    mode;
+        mode;
+
 
     document.getElementById(
         "modeDisplay"
     ).textContent =
-    "Current Mode: " +
-    mode;
+        "Current Mode: " +
+        mode;
+
 
     showMessage(
         "Attendance mode changed to " +
@@ -1016,7 +1182,7 @@ function setAttendanceMode(mode) {
 
 
 /* =====================================================
-   SEND TO GOOGLE SHEETS
+   SEND ATTENDANCE TO GOOGLE SHEETS
 ===================================================== */
 
 async function sendAttendanceToSheet(
@@ -1026,13 +1192,21 @@ async function sendAttendanceToSheet(
     if (isProcessing) {
 
         return {
-            success: false,
-            message: "Please wait."
+
+            success:
+                false,
+
+            message:
+                "Please wait."
+
         };
 
     }
 
-    isProcessing = true;
+
+    isProcessing =
+        true;
+
 
     try {
 
@@ -1041,36 +1215,44 @@ async function sendAttendanceToSheet(
             "info"
         );
 
+
         const response =
-        await fetch(
-            SCRIPT_URL,
-            {
-                method: "POST",
+            await fetch(
+                SCRIPT_URL,
+                {
 
-                headers: {
-                    "Content-Type":
-                    "text/plain;charset=utf-8"
-                },
+                    method:
+                        "POST",
 
-                body:
-                JSON.stringify({
+                    headers: {
 
-                    studentId:
-                    studentId,
+                        "Content-Type":
+                            "text/plain;charset=utf-8"
 
-                    action:
-                    attendanceMode
+                    },
 
-                })
-            }
-        );
+                    body:
+                        JSON.stringify({
+
+                            studentId:
+                                studentId,
+
+                            action:
+                                attendanceMode
+
+                        })
+
+                }
+            );
 
 
         const result =
-        await response.json();
+            await response.json();
 
 
-        if (result.success) {
+        if (
+            result.success
+        ) {
 
             showMessage(
                 result.message,
@@ -1081,12 +1263,33 @@ async function sendAttendanceToSheet(
 
         else {
 
-            playErrorSound();
+            /*
+             * Server may return success:false
+             * for duplicate attendance.
+             */
 
-            showMessage(
-                result.message,
-                "error"
-            );
+            if (
+                result.status ===
+                "COMPLETED"
+            ) {
+
+                showMessage(
+                    result.message,
+                    "info"
+                );
+
+            }
+
+            else {
+
+                playErrorSound();
+
+                showMessage(
+                    result.message,
+                    "error"
+                );
+
+            }
 
         }
 
@@ -1102,24 +1305,32 @@ async function sendAttendanceToSheet(
             error
         );
 
+
         playErrorSound();
+
 
         showMessage(
             "Unable to connect to the attendance database.",
             "error"
         );
 
+
         return {
-            success: false,
+
+            success:
+                false,
+
             message:
-            "Unable to connect to the attendance database."
+                "Unable to connect to the attendance database."
+
         };
 
     }
 
     finally {
 
-        isProcessing = false;
+        isProcessing =
+            false;
 
     }
 
@@ -1139,10 +1350,12 @@ async function processStudent(
 
         playErrorSound();
 
+
         showMessage(
             "Please enter a valid Student ID.",
             "error"
         );
+
 
         return;
 
@@ -1150,66 +1363,153 @@ async function processStudent(
 
 
     studentId =
-    studentId.trim();
+        studentId.trim();
 
+
+    /*
+     * First send to Google Sheets.
+     */
 
     const result =
-    await sendAttendanceToSheet(
-        studentId
-    );
+        await sendAttendanceToSheet(
+            studentId
+        );
 
 
-    if (!result.success) {
+    /*
+     * If the server rejected the scan,
+     * don't create a new local record.
+     */
+
+    if (
+        !result.success &&
+        result.status !==
+        "COMPLETED"
+    ) {
+
         return;
+
     }
 
 
     const today =
-    getToday();
+        getToday();
 
 
     const currentTime =
-    getCurrentTime();
+        getCurrentTime();
 
+
+    /*
+     * Find today's local record.
+     */
 
     let record =
-    attendanceRecords.find(
-        r =>
-        r.studentId ===
-        studentId &&
-        r.date ===
-        today
-    );
+        attendanceRecords.find(
+            r =>
+                r.studentId ===
+                studentId &&
+                r.date ===
+                today
+        );
 
 
 
-    /* TIME IN */
+    /* =================================================
+       TIME IN
+    ================================================= */
 
     if (
         attendanceMode ===
         "TIME IN"
     ) {
 
+
+        /*
+         * If server says already completed,
+         * don't overwrite it.
+         */
+
+        if (
+            result.status ===
+            "COMPLETED" &&
+            result.timeIn &&
+            result.timeOut
+        ) {
+
+            record = {
+
+                studentId:
+                    studentId,
+
+                date:
+                    today,
+
+                timeIn:
+                    result.timeIn,
+
+                timeOut:
+                    result.timeOut,
+
+                remark:
+                    result.remark || "",
+
+                status:
+                    "COMPLETED"
+
+            };
+
+
+            updateLocalRecord(
+                record
+            );
+
+
+            showStudentInfo(
+                studentId,
+                "Attendance already completed."
+            );
+
+
+            saveRecords();
+
+            displayAttendance();
+
+            return;
+
+        }
+
+
+
+        /*
+         * Create normal Time In record.
+         */
+
         if (!record) {
 
             record = {
 
                 studentId:
-                studentId,
+                    studentId,
 
                 date:
-                today,
+                    today,
 
                 timeIn:
-                currentTime,
+                    result.timeIn ||
+                    currentTime,
 
                 timeOut:
-                "",
+                    "",
+
+                remark:
+                    "",
 
                 status:
-                "PRESENT"
+                    "PRESENT"
 
             };
+
 
             attendanceRecords.push(
                 record
@@ -1217,47 +1517,18 @@ async function processStudent(
 
         }
 
-
-        if (
-            record.timeIn &&
-            record.timeOut
-        ) {
-
-            record.status =
-            "COMPLETED";
-
-        }
-
         else {
 
-            record.status =
-            "PRESENT";
-
-        }
-
-
-        showStudentInfo(
-            studentId,
-            "Time In recorded at " +
-            currentTime
-        );
-
-    }
+            record.timeIn =
+                result.timeIn ||
+                record.timeIn ||
+                currentTime;
 
 
-
-    /* TIME OUT */
-
-    else if (
-        attendanceMode ===
-        "TIME OUT"
-    ) {
-
-        if (record) {
-
-            record.timeOut =
-            currentTime;
-
+            /*
+             * If Time Out already exists,
+             * mark completed.
+             */
 
             if (
                 record.timeIn &&
@@ -1265,14 +1536,14 @@ async function processStudent(
             ) {
 
                 record.status =
-                "COMPLETED";
+                    "COMPLETED";
 
             }
 
             else {
 
                 record.status =
-                "PRESENT";
+                    "PRESENT";
 
             }
 
@@ -1281,9 +1552,183 @@ async function processStudent(
 
         showStudentInfo(
             studentId,
-            "Time Out recorded at " +
-            currentTime
+            "Time In recorded at " +
+            (
+                result.timeIn ||
+                currentTime
+            )
         );
+
+    }
+
+
+
+    /* =================================================
+       TIME OUT
+    ================================================= */
+
+    else if (
+        attendanceMode ===
+        "TIME OUT"
+    ) {
+
+
+        /*
+         * Student already has a local record.
+         */
+
+        if (!record) {
+
+            record = {
+
+                studentId:
+                    studentId,
+
+                date:
+                    today,
+
+                timeIn:
+                    result.timeIn ||
+                    "",
+
+                timeOut:
+                    result.timeOut ||
+                    currentTime,
+
+                remark:
+                    result.remark ||
+                    "",
+
+                status:
+                    result.status ||
+                    "COMPLETED"
+
+            };
+
+
+            attendanceRecords.push(
+                record
+            );
+
+        }
+
+        else {
+
+            /*
+             * Update Time Out.
+             */
+
+            record.timeOut =
+                result.timeOut ||
+                currentTime;
+
+
+            /*
+             * Update Time In if
+             * server has one.
+             */
+
+            if (
+                result.timeIn
+            ) {
+
+                record.timeIn =
+                    result.timeIn;
+
+            }
+
+
+            /*
+             * New NO TIME IN behavior.
+             */
+
+            if (
+                result.remark ===
+                "NO TIME IN"
+            ) {
+
+                record.remark =
+                    "NO TIME IN";
+
+            }
+
+
+            /*
+             * Completed whenever
+             * Time Out is successfully recorded.
+             */
+
+            if (
+                record.timeOut
+            ) {
+
+                record.status =
+                    "COMPLETED";
+
+            }
+
+        }
+
+
+        /*
+         * Make sure NO TIME IN is retained.
+         */
+
+        if (
+            result.remark ===
+            "NO TIME IN"
+        ) {
+
+            record.remark =
+                "NO TIME IN";
+
+        }
+
+
+        /*
+         * Make sure status is completed.
+         */
+
+        if (
+            result.status ===
+            "COMPLETED"
+        ) {
+
+            record.status =
+                "COMPLETED";
+
+        }
+
+
+        if (
+            result.remark ===
+            "NO TIME IN"
+        ) {
+
+            showStudentInfo(
+                studentId,
+                "Time Out recorded at " +
+                (
+                    result.timeOut ||
+                    currentTime
+                ) +
+                " — NO TIME IN"
+            );
+
+        }
+
+        else {
+
+            showStudentInfo(
+                studentId,
+                "Time Out recorded at " +
+                (
+                    result.timeOut ||
+                    currentTime
+                )
+            );
+
+        }
 
     }
 
@@ -1297,33 +1742,81 @@ async function processStudent(
 
 
 /* =====================================================
+   UPDATE LOCAL RECORD
+===================================================== */
+
+function updateLocalRecord(
+    newRecord
+) {
+
+    const index =
+        attendanceRecords.findIndex(
+            r =>
+                r.studentId ===
+                newRecord.studentId &&
+                r.date ===
+                newRecord.date
+        );
+
+
+    if (
+        index >=
+        0
+    ) {
+
+        attendanceRecords[index] =
+            newRecord;
+
+    }
+
+    else {
+
+        attendanceRecords.push(
+            newRecord
+        );
+
+    }
+
+}
+
+
+
+/* =====================================================
    MANUAL ID
 ===================================================== */
 
 function processManualID() {
 
     const input =
-    document.getElementById(
-        "studentIdInput"
-    );
+        document.getElementById(
+            "studentIdInput"
+        );
+
 
     const studentId =
-    input.value.trim();
+        input.value.trim();
 
 
     if (!studentId) {
 
         playErrorSound();
 
+
         showMessage(
             "Please enter a Student ID.",
             "error"
         );
 
+
         return;
 
     }
 
+
+    /*
+     * Manual entry also produces
+     * the scanner beep.
+     */
 
     playScannerBeep();
 
@@ -1333,7 +1826,8 @@ function processManualID() {
     );
 
 
-    input.value = "";
+    input.value =
+        "";
 
 }
 
@@ -1344,24 +1838,24 @@ function processManualID() {
 ===================================================== */
 
 document
-.getElementById(
-    "studentIdInput"
-)
-.addEventListener(
-    "keydown",
-    function(event) {
+    .getElementById(
+        "studentIdInput"
+    )
+    .addEventListener(
+        "keydown",
+        function(event) {
 
-        if (
-            event.key ===
-            "Enter"
-        ) {
+            if (
+                event.key ===
+                "Enter"
+            ) {
 
-            processManualID();
+                processManualID();
+
+            }
 
         }
-
-    }
-);
+    );
 
 
 
@@ -1375,8 +1869,13 @@ function onScanSuccess(
 ) {
 
     const now =
-    Date.now();
+        Date.now();
 
+
+    /*
+     * Prevent the same QR from being
+     * recorded repeatedly for 3 seconds.
+     */
 
     if (
         decodedText ===
@@ -1391,23 +1890,31 @@ function onScanSuccess(
     }
 
 
-    if (isProcessing) {
+    /*
+     * Prevent simultaneous processing.
+     */
+
+    if (
+        isProcessing
+    ) {
+
         return;
+
     }
 
 
     lastScannedCode =
-    decodedText;
+        decodedText;
 
 
     lastScanTime =
-    now;
+        now;
 
 
     /*
-    BEEP IMMEDIATELY
-    WHEN QR IS DETECTED
-    */
+     * BEEP IMMEDIATELY
+     * WHEN QR IS DETECTED.
+     */
 
     playScannerBeep();
 
@@ -1415,8 +1922,12 @@ function onScanSuccess(
     document.getElementById(
         "scannerStatus"
     ).textContent =
-    "QR code detected!";
+        "QR code detected!";
 
+
+    /*
+     * Process attendance.
+     */
 
     processStudent(
         decodedText
@@ -1430,12 +1941,14 @@ function onScanSuccess(
    QR SCAN FAILURE
 ===================================================== */
 
-function onScanFailure(error) {
+function onScanFailure(
+    error
+) {
 
     /*
-    Normal scanning failures
-    are ignored.
-    */
+     * Normal QR scanning failures
+     * are ignored.
+     */
 
 }
 
@@ -1446,34 +1959,40 @@ function onScanFailure(error) {
 ===================================================== */
 
 const html5QrCodeScanner =
-new Html5QrcodeScanner(
+    new Html5QrcodeScanner(
 
-    "reader",
+        "reader",
 
-    {
+        {
 
-        fps: 10,
+            fps:
+                10,
 
-        qrbox: {
-            width: 250,
-            height: 250
+            qrbox:
+                {
+                    width:
+                        250,
+
+                    height:
+                        250
+                },
+
+            rememberLastUsedCamera:
+                true,
+
+            supportedScanTypes:
+                [
+
+                    Html5QrcodeScanType
+                        .SCAN_TYPE_CAMERA
+
+                ]
+
         },
 
-        rememberLastUsedCamera:
-        true,
+        false
 
-        supportedScanTypes: [
-
-            Html5QrcodeScanType
-            .SCAN_TYPE_CAMERA
-
-        ]
-
-    },
-
-    false
-
-);
+    );
 
 
 html5QrCodeScanner.render(
@@ -1507,41 +2026,42 @@ function saveRecords() {
 function displayAttendance() {
 
     const table =
-    document.getElementById(
-        "attendanceTable"
-    );
+        document.getElementById(
+            "attendanceTable"
+        );
 
 
     const search =
-    document.getElementById(
-        "searchInput"
-    )
-    .value
-    .toLowerCase();
+        document.getElementById(
+            "searchInput"
+        )
+        .value
+        .toLowerCase();
 
 
     const today =
-    getToday();
+        getToday();
 
 
     const todayRecords =
-    attendanceRecords.filter(
-        record =>
-        record.date ===
-        today
-    );
+        attendanceRecords.filter(
+            record =>
+                record.date ===
+                today
+        );
 
 
     const filteredRecords =
-    todayRecords.filter(
-        record =>
-        record.studentId
-        .toLowerCase()
-        .includes(search)
-    );
+        todayRecords.filter(
+            record =>
+                record.studentId
+                    .toLowerCase()
+                    .includes(search)
+        );
 
 
-    table.innerHTML = "";
+    table.innerHTML =
+        "";
 
 
     if (
@@ -1551,22 +2071,22 @@ function displayAttendance() {
 
         table.innerHTML = `
 
-        <tr>
+            <tr>
 
-            <td
-                colspan="6"
-                class="empty-state"
-            >
+                <td
+                    colspan="7"
+                    class="empty-state">
 
-                No attendance records found.
+                    No attendance records found.
 
-            </td>
+                </td>
 
-        </tr>
+            </tr>
 
         `;
 
     }
+
 
 
     filteredRecords.forEach(
@@ -1576,67 +2096,121 @@ function displayAttendance() {
         ) => {
 
             const row =
-            document.createElement(
-                "tr"
-            );
+                document.createElement(
+                    "tr"
+                );
 
 
             const completed =
-            record.timeIn &&
-            record.timeOut;
+                record.status ===
+                "COMPLETED";
 
 
-            const statusClass =
-            completed
-            ? "completed"
-            : "present";
+            let statusClass =
+                "present";
+
+
+            if (
+                record.remark ===
+                "NO TIME IN"
+            ) {
+
+                statusClass =
+                    "no-time-in";
+
+            }
+
+            else if (
+                completed
+            ) {
+
+                statusClass =
+                    "completed";
+
+            }
 
 
             const statusText =
-            completed
-            ? "COMPLETED"
-            : "PRESENT";
+                completed
+                ? "COMPLETED"
+                : "PRESENT";
+
+
+            const remarkText =
+                record.remark ||
+                "—";
 
 
             row.innerHTML = `
 
-            <td>
-                ${index + 1}
-            </td>
+                <td>
+                    ${index + 1}
+                </td>
 
-            <td>
+                <td>
 
-                <strong>
+                    <strong>
+                        ${escapeHTML(
+                            record.studentId
+                        )}
+                    </strong>
+
+                </td>
+
+                <td>
                     ${escapeHTML(
-                        record.studentId
+                        record.date
                     )}
-                </strong>
+                </td>
 
-            </td>
+                <td>
+                    ${
+                        escapeHTML(
+                            record.timeIn ||
+                            "—"
+                        )
+                    }
+                </td>
 
-            <td>
-                ${record.date}
-            </td>
+                <td>
+                    ${
+                        escapeHTML(
+                            record.timeOut ||
+                            "—"
+                        )
+                    }
+                </td>
 
-            <td>
-                ${record.timeIn || "-"}
-            </td>
+                <td>
 
-            <td>
-                ${record.timeOut || "-"}
-            </td>
+                    <span
+                        class="status-badge ${
+                            record.remark ===
+                            "NO TIME IN"
+                            ? "no-time-in"
+                            : ""
+                        }">
 
-            <td>
+                        ${
+                            escapeHTML(
+                                remarkText
+                            )
+                        }
 
-                <span
-                    class="status-badge ${statusClass}"
-                >
+                    </span>
 
-                    ${statusText}
+                </td>
 
-                </span>
+                <td>
 
-            </td>
+                    <span
+                        class="status-badge ${statusClass}">
+
+                        ${statusText}
+
+                    </span>
+
+                </td>
 
             `;
 
@@ -1662,47 +2236,47 @@ function displayAttendance() {
 function updateStatistics() {
 
     const today =
-    getToday();
+        getToday();
 
 
     const todayRecords =
-    attendanceRecords.filter(
-        record =>
-        record.date ===
-        today
-    );
+        attendanceRecords.filter(
+            record =>
+                record.date ===
+                today
+        );
 
 
     const timeIn =
-    todayRecords.filter(
-        record =>
-        record.timeIn
-    ).length;
+        todayRecords.filter(
+            record =>
+                record.timeIn
+        ).length;
 
 
     const timeOut =
-    todayRecords.filter(
-        record =>
-        record.timeOut
-    ).length;
+        todayRecords.filter(
+            record =>
+                record.timeOut
+        ).length;
 
 
     document.getElementById(
         "totalStudents"
     ).textContent =
-    todayRecords.length;
+        todayRecords.length;
 
 
     document.getElementById(
         "timeInCount"
     ).textContent =
-    timeIn;
+        timeIn;
 
 
     document.getElementById(
         "timeOutCount"
     ).textContent =
-    timeOut;
+        timeOut;
 
 }
 
@@ -1718,25 +2292,25 @@ function showMessage(
 ) {
 
     const message =
-    document.getElementById(
-        "message"
-    );
+        document.getElementById(
+            "message"
+        );
 
 
     message.textContent =
-    text;
+        text;
 
 
     message.className =
-    "message " +
-    type;
+        "message " +
+        type;
 
 
     setTimeout(
         function() {
 
             message.className =
-            "message";
+                "message";
 
         },
         5000
@@ -1756,39 +2330,43 @@ function showStudentInfo(
 ) {
 
     const info =
-    document.getElementById(
-        "studentInfo"
-    );
+        document.getElementById(
+            "studentInfo"
+        );
 
 
     info.innerHTML = `
 
-    <strong>
-        Student ID:
-    </strong>
+        <strong>
+            Student ID:
+        </strong>
 
-    ${escapeHTML(studentId)}
+        ${escapeHTML(
+            studentId
+        )}
 
-    <br><br>
+        <br><br>
 
-    <strong>
-        Record:
-    </strong>
+        <strong>
+            Record:
+        </strong>
 
-    ${escapeHTML(message)}
+        ${escapeHTML(
+            message
+        )}
 
     `;
 
 
     info.style.display =
-    "block";
+        "block";
 
 
     setTimeout(
         function() {
 
             info.style.display =
-            "none";
+                "none";
 
         },
         5000
@@ -1802,16 +2380,18 @@ function showStudentInfo(
    HTML SECURITY
 ===================================================== */
 
-function escapeHTML(value) {
+function escapeHTML(
+    value
+) {
 
     const div =
-    document.createElement(
-        "div"
-    );
+        document.createElement(
+            "div"
+        );
 
 
     div.textContent =
-    value;
+        value;
 
 
     return div.innerHTML;
@@ -1827,15 +2407,15 @@ function escapeHTML(value) {
 function exportCSV() {
 
     const today =
-    getToday();
+        getToday();
 
 
     const records =
-    attendanceRecords.filter(
-        record =>
-        record.date ===
-        today
-    );
+        attendanceRecords.filter(
+            record =>
+                record.date ===
+                today
+        );
 
 
     if (
@@ -1845,10 +2425,12 @@ function exportCSV() {
 
         playErrorSound();
 
+
         showMessage(
             "There are no local attendance records to export.",
             "error"
         );
+
 
         return;
 
@@ -1856,53 +2438,54 @@ function exportCSV() {
 
 
     let csv =
-    "Student ID,Date,Time In,Time Out,Status\n";
+        "Student ID,Date,Time In,Time Out,Late/No Time In,Attendance Status\n";
 
 
     records.forEach(
         record => {
 
             csv +=
-            `"${record.studentId}",` +
-            `"${record.date}",` +
-            `"${record.timeIn}",` +
-            `"${record.timeOut}",` +
-            `"${record.status}"\n`;
+                `"${record.studentId}",` +
+                `"${record.date}",` +
+                `"${record.timeIn || ""}",` +
+                `"${record.timeOut || ""}",` +
+                `"${record.remark || ""}",` +
+                `"${record.status || ""}"\n`;
 
         }
     );
 
 
     const blob =
-    new Blob(
-        [csv],
-        {
-            type:
-            "text/csv;charset=utf-8;"
-        }
-    );
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
+        );
 
 
     const url =
-    URL.createObjectURL(
-        blob
-    );
+        URL.createObjectURL(
+            blob
+        );
 
 
     const link =
-    document.createElement(
-        "a"
-    );
+        document.createElement(
+            "a"
+        );
 
 
     link.href =
-    url;
+        url;
 
 
     link.download =
-    "attendance-" +
-    today +
-    ".csv";
+        "attendance-" +
+        today +
+        ".csv";
 
 
     document.body.appendChild(
@@ -1939,30 +2522,32 @@ function exportCSV() {
 function clearAttendance() {
 
     const confirmation =
-    confirm(
+        confirm(
 
-        "Are you sure you want to delete today's local attendance records?\n\n" +
+            "Are you sure you want to delete today's local attendance records?\n\n" +
 
-        "This will NOT delete records already saved in Google Sheets."
+            "This will NOT delete records already saved in Google Sheets."
 
-    );
+        );
 
 
     if (!confirmation) {
+
         return;
+
     }
 
 
     const today =
-    getToday();
+        getToday();
 
 
     attendanceRecords =
-    attendanceRecords.filter(
-        record =>
-        record.date !==
-        today
-    );
+        attendanceRecords.filter(
+            record =>
+                record.date !==
+                today
+        );
 
 
     saveRecords();
@@ -1987,6 +2572,7 @@ function clearAttendance() {
 displayAttendance();
 
 </script>
+
 
 </body>
 
