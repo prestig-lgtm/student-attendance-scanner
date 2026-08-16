@@ -332,8 +332,6 @@ Automated QR Code Attendance Scanner
 <div class="container">
 
 
-<!-- DASHBOARD -->
-
 <div class="dashboard">
 
 <div class="stat-card">
@@ -372,12 +370,8 @@ Time Out
 
 
 
-<!-- MAIN GRID -->
-
 <div class="main-grid">
 
-
-<!-- SCANNER -->
 
 <div class="card">
 
@@ -398,8 +392,6 @@ Camera scanner is ready.
 ● Attendance database connected
 </div>
 
-
-<!-- MANUAL ENTRY -->
 
 <div class="manual-section">
 
@@ -442,8 +434,6 @@ class="student-info"
 
 
 
-<!-- CONTROLS -->
-
 <div class="card">
 
 <h2>
@@ -461,8 +451,6 @@ Today:
 
 </div>
 
-
-<!-- TIME MODES -->
 
 <div class="action-buttons">
 
@@ -484,8 +472,6 @@ onclick="setAttendanceMode('TIME OUT')"
 </div>
 
 
-<!-- CURRENT MODE -->
-
 <div
 id="modeDisplay"
 class="message info"
@@ -494,8 +480,6 @@ style="display:block; margin-top:15px;"
 Current Mode: TIME IN
 </div>
 
-
-<!-- SOUND / EXPORT / CLEAR -->
 
 <div class="action-buttons">
 
@@ -540,8 +524,6 @@ Sound is disabled. Click Enable Sound before scanning.
 
 
 
-<!-- ATTENDANCE TABLE -->
-
 <div class="card">
 
 <h2>
@@ -570,29 +552,17 @@ style="width:100%;"
 
 <tr>
 
-<th>
-#
-</th>
+<th>#</th>
 
-<th>
-Student ID
-</th>
+<th>Student ID</th>
 
-<th>
-Date
-</th>
+<th>Date</th>
 
-<th>
-Time In
-</th>
+<th>Time In</th>
 
-<th>
-Time Out
-</th>
+<th>Time Out</th>
 
-<th>
-Status
-</th>
+<th>Status</th>
 
 </tr>
 
@@ -716,10 +686,6 @@ function enableSound() {
         ).textContent =
         "Sound enabled. Scanner beep is ready.";
 
-        /*
-        Test beep
-        */
-
         playScannerBeep();
 
     }
@@ -738,8 +704,10 @@ function enableSound() {
 
 
 /* =====================================================
-   SHORT HIGH-PITCHED SCANNER BEEP
-   APPROXIMATELY 0.3 SECOND
+   SCANNER BEEP
+   HIGH PITCH: 2200 Hz
+   DURATION: 0.3 SECOND
+   VOLUME: 0.35
 ===================================================== */
 
 function playScannerBeep() {
@@ -785,10 +753,6 @@ function playScannerBeep() {
         );
 
 
-        /*
-        HIGH-PITCHED TONE
-        */
-
         oscillator.type =
         "sine";
 
@@ -809,24 +773,28 @@ function playScannerBeep() {
         );
 
 
+        /*
+        VOLUME = 0.35
+        */
+
         gainNode.gain.exponentialRampToValueAtTime(
-            0.8,
+            0.35,
             now + 0.01
         );
 
 
         /*
-        Hold until 0.25 sec
+        Hold
         */
 
         gainNode.gain.setValueAtTime(
-            0.8,
+            0.35,
             now + 0.25
         );
 
 
         /*
-        Fade out by 0.3 sec
+        Fade out
         */
 
         gainNode.gain.exponentialRampToValueAtTime(
@@ -906,7 +874,7 @@ function playErrorSound() {
         );
 
         gainNode.gain.exponentialRampToValueAtTime(
-            0.5,
+            0.45,
             now + 0.01
         );
 
@@ -944,7 +912,8 @@ function playErrorSound() {
 
 function getToday() {
 
-    const now = new Date();
+    const now =
+    new Date();
 
     const year =
     now.getFullYear();
@@ -1356,11 +1325,6 @@ function processManualID() {
     }
 
 
-    /*
-    Manual submission also gives
-    the scanner beep.
-    */
-
     playScannerBeep();
 
 
@@ -1403,12 +1367,6 @@ document
 
 /* =====================================================
    QR SCAN SUCCESS
-
-   QR DETECTED
-        ↓
-   IMMEDIATE BEEP
-        ↓
-   GOOGLE SHEETS
 ===================================================== */
 
 function onScanSuccess(
@@ -1419,11 +1377,6 @@ function onScanSuccess(
     const now =
     Date.now();
 
-
-    /*
-    Prevent repeated detection
-    of the same QR for 3 seconds.
-    */
 
     if (
         decodedText ===
@@ -1464,10 +1417,6 @@ function onScanSuccess(
     ).textContent =
     "QR code detected!";
 
-
-    /*
-    Process after beep starts.
-    */
 
     processStudent(
         decodedText
