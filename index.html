@@ -3,1125 +3,616 @@
 
 <head>
 
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        Student Attendance Scanner
-    </title>
-
-
-    <!-- QR SCANNER LIBRARY -->
-
-    <script
-        src="https://unpkg.com/html5-qrcode"
-        type="text/javascript"
-    ></script>
-
-
-    <style>
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-
-        body {
-
-            font-family:
-                Arial,
-                Helvetica,
-                sans-serif;
-
-            background:
-                #f4f7fb;
-
-            color:
-                #1f2937;
-
-            min-height:
-                100vh;
-
-        }
-
-
-        /* ==========================================
-           HEADER
-        ========================================== */
-
-        header {
-
-            background:
-                #2563eb;
-
-            color:
-                white;
-
-            padding:
-                22px 20px;
-
-            text-align:
-                center;
-
-            box-shadow:
-                0 2px 8px rgba(0,0,0,0.15);
-
-        }
-
-
-        header h1 {
-
-            font-size:
-                28px;
-
-            margin-bottom:
-                6px;
-
-        }
-
-
-        header p {
-
-            font-size:
-                14px;
-
-            opacity:
-                0.9;
-
-        }
-
-
-        /* ==========================================
-           CONTAINER
-        ========================================== */
-
-        .container {
-
-            width:
-                95%;
-
-            max-width:
-                1100px;
-
-            margin:
-                25px auto;
-
-        }
-
-
-        /* ==========================================
-           DASHBOARD
-        ========================================== */
-
-        .dashboard {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(3, 1fr);
-
-            gap:
-                15px;
-
-            margin-bottom:
-                20px;
-
-        }
-
-
-        .stat-card {
-
-            background:
-                white;
-
-            border-radius:
-                12px;
-
-            padding:
-                20px;
-
-            text-align:
-                center;
-
-            box-shadow:
-                0 2px 8px rgba(0,0,0,0.08);
-
-        }
-
-
-        .stat-card h2 {
-
-            font-size:
-                30px;
-
-            color:
-                #2563eb;
-
-            margin-bottom:
-                5px;
-
-        }
-
-
-        .stat-card p {
-
-            font-size:
-                14px;
-
-            color:
-                #6b7280;
-
-        }
-
-
-        /* ==========================================
-           MAIN GRID
-        ========================================== */
-
-        .main-grid {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                1fr 1fr;
-
-            gap:
-                20px;
-
-        }
-
-
-        .card {
-
-            background:
-                white;
-
-            border-radius:
-                12px;
-
-            padding:
-                20px;
-
-            box-shadow:
-                0 2px 8px rgba(0,0,0,0.08);
-
-            margin-bottom:
-                20px;
-
-        }
-
-
-        .card h2 {
-
-            font-size:
-                20px;
-
-            margin-bottom:
-                15px;
-
-            color:
-                #111827;
-
-        }
-
-
-        /* ==========================================
-           QR SCANNER
-        ========================================== */
-
-        #reader {
-
-            width:
-                100%;
-
-            max-width:
-                500px;
-
-            margin:
-                auto;
-
-        }
-
-
-        .scanner-status {
-
-            text-align:
-                center;
-
-            margin-top:
-                12px;
-
-            font-size:
-                14px;
-
-            color:
-                #6b7280;
-
-        }
-
-
-        .connection-status {
-
-            text-align:
-                center;
-
-            margin-top:
-                8px;
-
-            font-size:
-                13px;
-
-            color:
-                #16a34a;
-
-            font-weight:
-                bold;
-
-        }
-
-
-        /* ==========================================
-           MANUAL ENTRY
-        ========================================== */
-
-        .manual-section {
-
-            margin-top:
-                20px;
-
-            border-top:
-                1px solid #e5e7eb;
-
-            padding-top:
-                20px;
-
-        }
-
-
-        .manual-section h3 {
-
-            margin-bottom:
-                10px;
-
-            font-size:
-                16px;
-
-        }
-
-
-        .input-group {
-
-            display:
-                flex;
-
-            gap:
-                8px;
-
-        }
-
-
-        input {
-
-            flex:
-                1;
-
-            padding:
-                12px;
-
-            border:
-                1px solid #d1d5db;
-
-            border-radius:
-                8px;
-
-            font-size:
-                15px;
-
-            outline:
-                none;
-
-        }
-
-
-        input:focus {
-
-            border-color:
-                #2563eb;
-
-        }
-
-
-        /* ==========================================
-           BUTTONS
-        ========================================== */
-
-        button {
-
-            border:
-                none;
-
-            border-radius:
-                8px;
-
-            padding:
-                11px 16px;
-
-            cursor:
-                pointer;
-
-            font-size:
-                14px;
-
-            font-weight:
-                bold;
-
-            transition:
-                0.2s;
-
-        }
-
-
-        button:hover {
-
-            opacity:
-                0.9;
-
-        }
-
-
-        button:active {
-
-            transform:
-                scale(0.98);
-
-        }
-
-
-        .primary-btn {
-
-            background:
-                #2563eb;
-
-            color:
-                white;
-
-        }
-
-
-        .success-btn {
-
-            background:
-                #16a34a;
-
-            color:
-                white;
-
-        }
-
-
-        .danger-btn {
-
-            background:
-                #dc2626;
-
-            color:
-                white;
-
-        }
-
-
-        .sound-enabled {
-
-            background:
-                #16a34a !important;
-
-        }
-
-
-        .action-buttons {
-
-            display:
-                flex;
-
-            gap:
-                8px;
-
-            flex-wrap:
-                wrap;
-
-            margin-top:
-                15px;
-
-        }
-
-
-        /* ==========================================
-           MESSAGES
-        ========================================== */
-
-        .message {
-
-            display:
-                none;
-
-            margin-top:
-                15px;
-
-            padding:
-                12px;
-
-            border-radius:
-                8px;
-
-            font-size:
-                14px;
-
-        }
-
-
-        .message.success {
-
-            display:
-                block;
-
-            background:
-                #dcfce7;
-
-            color:
-                #166534;
-
-        }
-
-
-        .message.error {
-
-            display:
-                block;
-
-            background:
-                #fee2e2;
-
-            color:
-                #991b1b;
-
-        }
-
-
-        .message.info {
-
-            display:
-                block;
-
-            background:
-                #dbeafe;
-
-            color:
-                #1e40af;
-
-        }
-
-
-        /* ==========================================
-           SOUND STATUS
-        ========================================== */
-
-        .sound-status {
-
-            font-size:
-                13px;
-
-            color:
-                #6b7280;
-
-        }
-
-
-        /* ==========================================
-           TABLE
-        ========================================== */
-
-        .table-container {
-
-            overflow-x:
-                auto;
-
-        }
-
-
-        table {
-
-            width:
-                100%;
-
-            border-collapse:
-                collapse;
-
-            min-width:
-                650px;
-
-        }
-
-
-        th,
-        td {
-
-            padding:
-                12px;
-
-            text-align:
-                left;
-
-            border-bottom:
-                1px solid #e5e7eb;
-
-            font-size:
-                14px;
-
-        }
-
-
-        th {
-
-            background:
-                #f3f4f6;
-
-            font-weight:
-                bold;
-
-        }
-
-
-        tr:hover {
-
-            background:
-                #f9fafb;
-
-        }
-
-
-        .status-badge {
-
-            display:
-                inline-block;
-
-            padding:
-                5px 9px;
-
-            border-radius:
-                20px;
-
-            font-size:
-                12px;
-
-            font-weight:
-                bold;
-
-        }
-
-
-        .present {
-
-            background:
-                #dcfce7;
-
-            color:
-                #166534;
-
-        }
-
-
-        .completed {
-
-            background:
-                #dbeafe;
-
-            color:
-                #1e40af;
-
-        }
-
-
-        .empty-state {
-
-            text-align:
-                center;
-
-            padding:
-                30px;
-
-            color:
-                #6b7280;
-
-        }
-
-
-        .date-display {
-
-            text-align:
-                center;
-
-            margin-bottom:
-                15px;
-
-            color:
-                #6b7280;
-
-            font-size:
-                14px;
-
-        }
-
-
-        .student-info {
-
-            margin-top:
-                15px;
-
-            padding:
-                15px;
-
-            background:
-                #f9fafb;
-
-            border-radius:
-                8px;
-
-            display:
-                none;
-
-        }
-
-
-        footer {
-
-            text-align:
-                center;
-
-            color:
-                #6b7280;
-
-            font-size:
-                13px;
-
-            padding:
-                25px;
-
-        }
-
-
-        /* ==========================================
-           MOBILE
-        ========================================== */
-
-        @media (max-width: 800px) {
-
-            .dashboard {
-
-                grid-template-columns:
-                    1fr;
-
-            }
-
-
-            .main-grid {
-
-                grid-template-columns:
-                    1fr;
-
-            }
-
-
-            header h1 {
-
-                font-size:
-                    23px;
-
-            }
-
-        }
-
-
-    </style>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Student Attendance Scanner</title>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f7fb;
+    color: #1f2937;
+    min-height: 100vh;
+}
+
+header {
+    background: #2563eb;
+    color: white;
+    padding: 22px 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+header h1 {
+    font-size: 28px;
+    margin-bottom: 6px;
+}
+
+header p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.container {
+    width: 95%;
+    max-width: 1100px;
+    margin: 25px auto;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.stat-card h2 {
+    font-size: 30px;
+    color: #2563eb;
+    margin-bottom: 5px;
+}
+
+.stat-card p {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.card h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #111827;
+}
+
+#reader {
+    width: 100%;
+    max-width: 500px;
+    margin: auto;
+}
+
+.scanner-status {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.connection-status {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #16a34a;
+    font-weight: bold;
+}
+
+.manual-section {
+    margin-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 20px;
+}
+
+.manual-section h3 {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #2563eb;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.primary-btn {
+    background: #2563eb;
+    color: white;
+}
+
+.success-btn {
+    background: #16a34a;
+    color: white;
+}
+
+.danger-btn {
+    background: #dc2626;
+    color: white;
+}
+
+.sound-enabled {
+    background: #16a34a !important;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.message {
+    display: none;
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.message.success {
+    display: block;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.message.error {
+    display: block;
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.message.info {
+    display: block;
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.sound-status {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 650px;
+}
+
+th,
+td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+th {
+    background: #f3f4f6;
+    font-weight: bold;
+}
+
+tr:hover {
+    background: #f9fafb;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.present {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.completed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #6b7280;
+}
+
+.date-display {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.student-info {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f9fafb;
+    border-radius: 8px;
+    display: none;
+}
+
+footer {
+    text-align: center;
+    color: #6b7280;
+    font-size: 13px;
+    padding: 25px;
+}
+
+@media (max-width: 800px) {
+
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    header h1 {
+        font-size: 23px;
+    }
+
+}
+
+</style>
 
 </head>
 
-
 <body>
-
-
-<!-- ==========================================
-     HEADER
-========================================== -->
 
 <header>
 
-    <h1>
-        📋 Student Attendance System
-    </h1>
+<h1>
+📋 Student Attendance System
+</h1>
 
-    <p>
-        Automated QR Code Attendance Scanner
-    </p>
+<p>
+Automated QR Code Attendance Scanner
+</p>
 
 </header>
-
 
 
 <div class="container">
 
 
-    <!-- ==========================================
-         DASHBOARD
-    ========================================== -->
+<!-- DASHBOARD -->
 
-    <div class="dashboard">
+<div class="dashboard">
 
+<div class="stat-card">
 
-        <div class="stat-card">
+<h2 id="totalStudents">0</h2>
 
-            <h2 id="totalStudents">
-                0
-            </h2>
+<p>
+Students Scanned Today
+</p>
 
-            <p>
-                Students Scanned Today
-            </p>
+</div>
 
-        </div>
 
+<div class="stat-card">
 
-        <div class="stat-card">
+<h2 id="timeInCount">0</h2>
 
-            <h2 id="timeInCount">
-                0
-            </h2>
+<p>
+Time In
+</p>
 
-            <p>
-                Time In
-            </p>
+</div>
 
-        </div>
 
+<div class="stat-card">
 
-        <div class="stat-card">
+<h2 id="timeOutCount">0</h2>
 
-            <h2 id="timeOutCount">
-                0
-            </h2>
+<p>
+Time Out
+</p>
 
-            <p>
-                Time Out
-            </p>
-
-        </div>
-
-
-    </div>
-
-
-
-    <!-- ==========================================
-         MAIN GRID
-    ========================================== -->
-
-    <div class="main-grid">
-
-
-        <!-- ======================================
-             SCANNER CARD
-        ====================================== -->
-
-        <div class="card">
-
-
-            <h2>
-                📷 Scan Student QR Code
-            </h2>
-
-
-            <div id="reader"></div>
-
-
-            <div
-                class="scanner-status"
-                id="scannerStatus"
-            >
-                Camera scanner is ready.
-            </div>
-
-
-            <div class="connection-status">
-
-                ● Attendance database connected
-
-            </div>
-
-
-            <!-- ==================================
-                 MANUAL ENTRY
-            ================================== -->
-
-            <div class="manual-section">
-
-
-                <h3>
-                    Or Enter Student ID Manually
-                </h3>
-
-
-                <div class="input-group">
-
-
-                    <input
-                        type="text"
-                        id="studentIdInput"
-                        placeholder="Enter Student ID"
-                    >
-
-
-                    <button
-                        class="primary-btn"
-                        onclick="processManualID()"
-                    >
-                        Submit
-                    </button>
-
-
-                </div>
-
-
-            </div>
-
-
-            <div
-                id="message"
-                class="message"
-            ></div>
-
-
-            <div
-                id="studentInfo"
-                class="student-info"
-            ></div>
-
-
-        </div>
-
-
-
-        <!-- ======================================
-             CONTROLS CARD
-        ====================================== -->
-
-        <div class="card">
-
-
-            <h2>
-                ⚙️ Attendance Controls
-            </h2>
-
-
-            <div class="date-display">
-
-                <strong>
-                    Today:
-                </strong>
-
-                <span id="currentDate"></span>
-
-            </div>
-
-
-
-            <!-- TIME MODES -->
-
-            <div class="action-buttons">
-
-
-                <button
-                    class="success-btn"
-                    onclick="setAttendanceMode('TIME IN')"
-                >
-                    🟢 Time In Mode
-                </button>
-
-
-                <button
-                    class="primary-btn"
-                    onclick="setAttendanceMode('TIME OUT')"
-                >
-                    🔵 Time Out Mode
-                </button>
-
-
-            </div>
-
-
-
-            <!-- CURRENT MODE -->
-
-            <div
-                id="modeDisplay"
-                class="message info"
-                style="
-                    display:block;
-                    margin-top:15px;
-                "
-            >
-                Current Mode: TIME IN
-            </div>
-
-
-
-            <!-- ==================================
-                 SOUND + EXPORT + CLEAR
-            ================================== -->
-
-            <div class="action-buttons">
-
-
-                <button
-                    id="soundButton"
-                    class="primary-btn"
-                    onclick="enableSound()"
-                >
-                    🔊 ENABLE SOUND
-                </button>
-
-
-                <button
-                    class="primary-btn"
-                    onclick="exportCSV()"
-                >
-                    📥 Export Local CSV
-                </button>
-
-
-                <button
-                    class="danger-btn"
-                    onclick="clearAttendance()"
-                >
-                    🗑️ Clear Local Records
-                </button>
-
-
-            </div>
-
-
-            <div
-                id="soundStatus"
-                class="sound-status"
-                style="margin-top:10px;"
-            >
-                Sound is disabled. Click Enable Sound before scanning.
-            </div>
-
-
-        </div>
-
-
-    </div>
-
-
-
-    <!-- ==========================================
-         ATTENDANCE TABLE
-    ========================================== -->
-
-    <div class="card">
-
-
-        <h2>
-            📊 Today's Attendance
-        </h2>
-
-
-        <div style="margin-bottom:15px;">
-
-
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="🔎 Search Student ID..."
-                oninput="displayAttendance()"
-                style="width:100%;"
-            >
-
-
-        </div>
-
-
-
-        <div class="table-container">
-
-
-            <table>
-
-
-                <thead>
-
-
-                    <tr>
-
-                        <th>
-                            #
-                        </th>
-
-                        <th>
-                            Student ID
-                        </th>
-
-                        <th>
-                            Date
-                        </th>
-
-                        <th>
-                            Time In
-                        </th>
-
-                        <th>
-                            Time Out
-                        </th>
-
-                        <th>
-                            Status
-                        </th>
-
-                    </tr>
-
-
-                </thead>
-
-
-                <tbody
-                    id="attendanceTable"
-                ></tbody>
-
-
-            </table>
-
-
-        </div>
-
-
-    </div>
-
+</div>
 
 </div>
 
 
 
+<!-- MAIN GRID -->
+
+<div class="main-grid">
+
+
+<!-- SCANNER -->
+
+<div class="card">
+
+<h2>
+📷 Scan Student QR Code
+</h2>
+
+<div id="reader"></div>
+
+<div
+class="scanner-status"
+id="scannerStatus"
+>
+Camera scanner is ready.
+</div>
+
+<div class="connection-status">
+● Attendance database connected
+</div>
+
+
+<!-- MANUAL ENTRY -->
+
+<div class="manual-section">
+
+<h3>
+Or Enter Student ID Manually
+</h3>
+
+<div class="input-group">
+
+<input
+type="text"
+id="studentIdInput"
+placeholder="Enter Student ID"
+>
+
+<button
+class="primary-btn"
+onclick="processManualID()"
+>
+Submit
+</button>
+
+</div>
+
+</div>
+
+
+<div
+id="message"
+class="message"
+></div>
+
+
+<div
+id="studentInfo"
+class="student-info"
+></div>
+
+</div>
+
+
+
+<!-- CONTROLS -->
+
+<div class="card">
+
+<h2>
+⚙️ Attendance Controls
+</h2>
+
+
+<div class="date-display">
+
+<strong>
+Today:
+</strong>
+
+<span id="currentDate"></span>
+
+</div>
+
+
+<!-- TIME MODES -->
+
+<div class="action-buttons">
+
+<button
+class="success-btn"
+onclick="setAttendanceMode('TIME IN')"
+>
+🟢 Time In Mode
+</button>
+
+
+<button
+class="primary-btn"
+onclick="setAttendanceMode('TIME OUT')"
+>
+🔵 Time Out Mode
+</button>
+
+</div>
+
+
+<!-- CURRENT MODE -->
+
+<div
+id="modeDisplay"
+class="message info"
+style="display:block; margin-top:15px;"
+>
+Current Mode: TIME IN
+</div>
+
+
+<!-- SOUND / EXPORT / CLEAR -->
+
+<div class="action-buttons">
+
+<button
+id="soundButton"
+class="primary-btn"
+onclick="enableSound()"
+>
+🔊 ENABLE SOUND
+</button>
+
+
+<button
+class="primary-btn"
+onclick="exportCSV()"
+>
+📥 Export Local CSV
+</button>
+
+
+<button
+class="danger-btn"
+onclick="clearAttendance()"
+>
+🗑️ Clear Local Records
+</button>
+
+</div>
+
+
+<div
+id="soundStatus"
+class="sound-status"
+style="margin-top:10px;"
+>
+Sound is disabled. Click Enable Sound before scanning.
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ATTENDANCE TABLE -->
+
+<div class="card">
+
+<h2>
+📊 Today's Attendance
+</h2>
+
+
+<div style="margin-bottom:15px;">
+
+<input
+type="text"
+id="searchInput"
+placeholder="🔎 Search Student ID..."
+oninput="displayAttendance()"
+style="width:100%;"
+>
+
+</div>
+
+
+<div class="table-container">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+#
+</th>
+
+<th>
+Student ID
+</th>
+
+<th>
+Date
+</th>
+
+<th>
+Time In
+</th>
+
+<th>
+Time Out
+</th>
+
+<th>
+Status
+</th>
+
+</tr>
+
+</thead>
+
+<tbody id="attendanceTable">
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+
 <footer>
 
-    Automated Student Attendance System
+Automated Student Attendance System
 
 </footer>
 
@@ -1130,89 +621,72 @@
 <script>
 
 
-/* =========================================================
+/* =====================================================
    GOOGLE APPS SCRIPT URL
-========================================================= */
+===================================================== */
 
 const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyPWMqQzXUI50IiaMPOc8SK3mYl6vF8jF5Yg-4pstArZ_oVfuBAoJHwgvv65OT3hggCvQ/exec";
 
 
 
-/* =========================================================
+/* =====================================================
    SYSTEM VARIABLES
-========================================================= */
+===================================================== */
 
-let attendanceMode =
-    "TIME IN";
-
+let attendanceMode = "TIME IN";
 
 let attendanceRecords =
-    JSON.parse(
-        localStorage.getItem(
-            "attendanceRecords"
-        )
-    ) || [];
+JSON.parse(
+localStorage.getItem("attendanceRecords")
+) || [];
 
+let lastScannedCode = "";
 
-let lastScannedCode =
-    "";
+let lastScanTime = 0;
 
-
-let lastScanTime =
-    0;
-
-
-let isProcessing =
-    false;
+let isProcessing = false;
 
 
 
-/* =========================================================
+/* =====================================================
    AUDIO VARIABLES
-========================================================= */
+===================================================== */
 
-let audioContext =
-    null;
+let audioContext = null;
 
-
-let soundEnabled =
-    false;
+let soundEnabled = false;
 
 
 
-/* =========================================================
+/* =====================================================
    ENABLE SOUND
-========================================================= */
+===================================================== */
 
 function enableSound() {
 
     try {
 
         const AudioContext =
-            window.AudioContext ||
-            window.webkitAudioContext;
-
+        window.AudioContext ||
+        window.webkitAudioContext;
 
         if (!AudioContext) {
 
             document.getElementById(
                 "soundStatus"
             ).textContent =
-                "Audio is not supported by this browser.";
+            "Audio is not supported by this browser.";
 
             return;
-
         }
-
 
         if (!audioContext) {
 
             audioContext =
-                new AudioContext();
+            new AudioContext();
 
         }
-
 
         if (
             audioContext.state ===
@@ -1223,40 +697,34 @@ function enableSound() {
 
         }
 
-
-        soundEnabled =
-            true;
-
+        soundEnabled = true;
 
         const button =
-            document.getElementById(
-                "soundButton"
-            );
-
+        document.getElementById(
+            "soundButton"
+        );
 
         button.textContent =
-            "🔊 SOUND ENABLED";
-
+        "🔊 SOUND ENABLED";
 
         button.classList.add(
             "sound-enabled"
         );
 
-
         document.getElementById(
             "soundStatus"
         ).textContent =
-            "Sound enabled. QR detection will produce a high-pitched 1-second beep.";
-
+        "Sound enabled. Scanner beep is ready.";
 
         /*
-         Test beep
+        Test beep
         */
 
         playScannerBeep();
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.error(
             "Audio initialization error:",
@@ -1269,27 +737,22 @@ function enableSound() {
 
 
 
-/* =========================================================
-   HIGH-PITCHED 1-SECOND SCANNER BEEP
-========================================================= */
+/* =====================================================
+   SHORT HIGH-PITCHED SCANNER BEEP
+   APPROXIMATELY 0.3 SECOND
+===================================================== */
 
 function playScannerBeep() {
 
     if (!soundEnabled) {
-
         return;
-
     }
-
 
     try {
 
         if (!audioContext) {
-
             return;
-
         }
-
 
         if (
             audioContext.state ===
@@ -1300,17 +763,16 @@ function playScannerBeep() {
 
         }
 
-
         const now =
-            audioContext.currentTime;
+        audioContext.currentTime;
 
 
         const oscillator =
-            audioContext.createOscillator();
+        audioContext.createOscillator();
 
 
         const gainNode =
-            audioContext.createGain();
+        audioContext.createGain();
 
 
         oscillator.connect(
@@ -1324,13 +786,11 @@ function playScannerBeep() {
 
 
         /*
-         HIGH-PITCHED TONE
-
-         2200 Hz
+        HIGH-PITCHED TONE
         */
 
         oscillator.type =
-            "sine";
+        "sine";
 
 
         oscillator.frequency.setValueAtTime(
@@ -1340,7 +800,7 @@ function playScannerBeep() {
 
 
         /*
-         Start almost silent.
+        Quick attack
         */
 
         gainNode.gain.setValueAtTime(
@@ -1349,33 +809,29 @@ function playScannerBeep() {
         );
 
 
-        /*
-         Fast attack.
-        */
-
         gainNode.gain.exponentialRampToValueAtTime(
             0.8,
-            now + 0.02
+            now + 0.01
         );
 
 
         /*
-         Hold the sound.
+        Hold until 0.25 sec
         */
 
         gainNode.gain.setValueAtTime(
             0.8,
-            now + 0.90
+            now + 0.25
         );
 
 
         /*
-         Fade out.
+        Fade out by 0.3 sec
         */
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
-            now + 1.0
+            now + 0.30
         );
 
 
@@ -1384,16 +840,13 @@ function playScannerBeep() {
         );
 
 
-        /*
-         Exactly one second.
-        */
-
         oscillator.stop(
-            now + 1.0
+            now + 0.30
         );
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.log(
             "Scanner beep error:",
@@ -1406,89 +859,73 @@ function playScannerBeep() {
 
 
 
-/* =========================================================
+/* =====================================================
    ERROR SOUND
-========================================================= */
+===================================================== */
 
 function playErrorSound() {
 
     if (!soundEnabled) {
-
         return;
-
     }
-
 
     try {
 
         if (!audioContext) {
-
             return;
-
         }
 
-
         const now =
-            audioContext.currentTime;
-
+        audioContext.currentTime;
 
         const oscillator =
-            audioContext.createOscillator();
-
+        audioContext.createOscillator();
 
         const gainNode =
-            audioContext.createGain();
-
+        audioContext.createGain();
 
         oscillator.connect(
             gainNode
         );
 
-
         gainNode.connect(
             audioContext.destination
         );
 
-
         oscillator.type =
-            "square";
-
+        "square";
 
         oscillator.frequency.setValueAtTime(
             350,
             now
         );
 
-
         gainNode.gain.setValueAtTime(
             0.0001,
             now
         );
-
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.5,
             now + 0.01
         );
 
-
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
             now + 0.25
         );
 
-
         oscillator.start(
             now
         );
-
 
         oscillator.stop(
             now + 0.25
         );
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.log(
             "Error sound error:",
@@ -1501,37 +938,26 @@ function playErrorSound() {
 
 
 
-/* =========================================================
+/* =====================================================
    DATE
-========================================================= */
+===================================================== */
 
 function getToday() {
 
-    const now =
-        new Date();
-
+    const now = new Date();
 
     const year =
-        now.getFullYear();
-
+    now.getFullYear();
 
     const month =
-        String(
-            now.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
+    String(
+        now.getMonth() + 1
+    ).padStart(2, "0");
 
     const day =
-        String(
-            now.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
+    String(
+        now.getDate()
+    ).padStart(2, "0");
 
     return (
         year +
@@ -1545,27 +971,21 @@ function getToday() {
 
 
 
-/* =========================================================
+/* =====================================================
    CURRENT TIME
-========================================================= */
+===================================================== */
 
 function getCurrentTime() {
 
     const now =
-        new Date();
-
+    new Date();
 
     return now.toLocaleTimeString(
         [],
         {
-            hour:
-                "2-digit",
-
-            minute:
-                "2-digit",
-
-            second:
-                "2-digit"
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
         }
     );
 
@@ -1573,27 +993,21 @@ function getCurrentTime() {
 
 
 
-/* =========================================================
+/* =====================================================
    DISPLAY DATE
-========================================================= */
+===================================================== */
 
 function getDisplayDate() {
 
     const now =
-        new Date();
-
+    new Date();
 
     return now.toLocaleDateString(
         [],
         {
-            year:
-                "numeric",
-
-            month:
-                "long",
-
-            day:
-                "numeric"
+            year: "numeric",
+            month: "long",
+            day: "numeric"
         }
     );
 
@@ -1603,28 +1017,24 @@ function getDisplayDate() {
 document.getElementById(
     "currentDate"
 ).textContent =
-    getDisplayDate();
+getDisplayDate();
 
 
 
-/* =========================================================
+/* =====================================================
    ATTENDANCE MODE
-========================================================= */
+===================================================== */
 
-function setAttendanceMode(
-    mode
-) {
+function setAttendanceMode(mode) {
 
     attendanceMode =
-        mode;
-
+    mode;
 
     document.getElementById(
         "modeDisplay"
     ).textContent =
-        "Current Mode: " +
-        mode;
-
+    "Current Mode: " +
+    mode;
 
     showMessage(
         "Attendance mode changed to " +
@@ -1636,9 +1046,9 @@ function setAttendanceMode(
 
 
 
-/* =========================================================
+/* =====================================================
    SEND TO GOOGLE SHEETS
-========================================================= */
+===================================================== */
 
 async function sendAttendanceToSheet(
     studentId
@@ -1647,21 +1057,13 @@ async function sendAttendanceToSheet(
     if (isProcessing) {
 
         return {
-
-            success:
-                false,
-
-            message:
-                "Please wait."
-
+            success: false,
+            message: "Please wait."
         };
 
     }
 
-
-    isProcessing =
-        true;
-
+    isProcessing = true;
 
     try {
 
@@ -1670,63 +1072,47 @@ async function sendAttendanceToSheet(
             "info"
         );
 
-
         const response =
-            await fetch(
-                SCRIPT_URL,
-                {
+        await fetch(
+            SCRIPT_URL,
+            {
+                method: "POST",
 
-                    method:
-                        "POST",
+                headers: {
+                    "Content-Type":
+                    "text/plain;charset=utf-8"
+                },
 
-                    headers:
-                        {
-                            "Content-Type":
-                                "text/plain;charset=utf-8"
-                        },
+                body:
+                JSON.stringify({
 
-                    body:
-                        JSON.stringify({
+                    studentId:
+                    studentId,
 
-                            studentId:
-                                studentId,
+                    action:
+                    attendanceMode
 
-                            action:
-                                attendanceMode
-
-                        })
-
-                }
-            );
+                })
+            }
+        );
 
 
         const result =
-            await response.json();
+        await response.json();
 
 
-        /*
-         IMPORTANT:
-
-         There is NO success beep here.
-
-         The beep happened immediately
-         when the QR was detected.
-        */
-
-
-        if (
-            result.success
-        ) {
+        if (result.success) {
 
             showMessage(
                 result.message,
                 "success"
             );
 
-        } else {
+        }
+
+        else {
 
             playErrorSound();
-
 
             showMessage(
                 result.message,
@@ -1738,39 +1124,33 @@ async function sendAttendanceToSheet(
 
         return result;
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.error(
             "Attendance server error:",
             error
         );
 
-
         playErrorSound();
-
 
         showMessage(
             "Unable to connect to the attendance database.",
             "error"
         );
 
-
         return {
-
-            success:
-                false,
-
+            success: false,
             message:
-                "Unable to connect to the attendance database."
-
+            "Unable to connect to the attendance database."
         };
 
+    }
 
-    } finally {
+    finally {
 
-        isProcessing =
-            false;
+        isProcessing = false;
 
     }
 
@@ -1778,9 +1158,9 @@ async function sendAttendanceToSheet(
 
 
 
-/* =========================================================
+/* =====================================================
    PROCESS STUDENT
-========================================================= */
+===================================================== */
 
 async function processStudent(
     studentId
@@ -1790,12 +1170,10 @@ async function processStudent(
 
         playErrorSound();
 
-
         showMessage(
             "Please enter a valid Student ID.",
             "error"
         );
-
 
         return;
 
@@ -1803,74 +1181,66 @@ async function processStudent(
 
 
     studentId =
-        studentId.trim();
+    studentId.trim();
 
 
     const result =
-        await sendAttendanceToSheet(
-            studentId
-        );
+    await sendAttendanceToSheet(
+        studentId
+    );
 
 
-    if (
-        !result.success
-    ) {
-
+    if (!result.success) {
         return;
-
     }
 
 
     const today =
-        getToday();
+    getToday();
 
 
     const currentTime =
-        getCurrentTime();
+    getCurrentTime();
 
 
     let record =
-        attendanceRecords.find(
-            r =>
-                r.studentId ===
-                    studentId &&
-                r.date ===
-                    today
-        );
+    attendanceRecords.find(
+        r =>
+        r.studentId ===
+        studentId &&
+        r.date ===
+        today
+    );
 
 
 
-    /* =========================================
-       TIME IN
-    ========================================= */
+    /* TIME IN */
 
     if (
         attendanceMode ===
         "TIME IN"
     ) {
 
-
         if (!record) {
 
             record = {
 
                 studentId:
-                    studentId,
+                studentId,
 
                 date:
-                    today,
+                today,
 
                 timeIn:
-                    currentTime,
+                currentTime,
 
                 timeOut:
-                    "",
+                "",
 
                 status:
-                    "PRESENT"
+                "PRESENT"
 
             };
-
 
             attendanceRecords.push(
                 record
@@ -1879,22 +1249,20 @@ async function processStudent(
         }
 
 
-        /*
-         Both filled = COMPLETED
-        */
-
         if (
             record.timeIn &&
             record.timeOut
         ) {
 
             record.status =
-                "COMPLETED";
+            "COMPLETED";
 
-        } else {
+        }
+
+        else {
 
             record.status =
-                "PRESENT";
+            "PRESENT";
 
         }
 
@@ -1909,26 +1277,18 @@ async function processStudent(
 
 
 
-    /* =========================================
-       TIME OUT
-    ========================================= */
+    /* TIME OUT */
 
     else if (
         attendanceMode ===
         "TIME OUT"
     ) {
 
-
         if (record) {
 
             record.timeOut =
-                currentTime;
+            currentTime;
 
-
-            /*
-             Both Time In and Time Out
-             filled = COMPLETED
-            */
 
             if (
                 record.timeIn &&
@@ -1936,12 +1296,14 @@ async function processStudent(
             ) {
 
                 record.status =
-                    "COMPLETED";
+                "COMPLETED";
 
-            } else {
+            }
+
+            else {
 
                 record.status =
-                    "PRESENT";
+                "PRESENT";
 
             }
 
@@ -1959,39 +1321,35 @@ async function processStudent(
 
     saveRecords();
 
-
     displayAttendance();
 
 }
 
 
 
-/* =========================================================
+/* =====================================================
    MANUAL ID
-========================================================= */
+===================================================== */
 
 function processManualID() {
 
     const input =
-        document.getElementById(
-            "studentIdInput"
-        );
-
+    document.getElementById(
+        "studentIdInput"
+    );
 
     const studentId =
-        input.value.trim();
+    input.value.trim();
 
 
     if (!studentId) {
 
         playErrorSound();
 
-
         showMessage(
             "Please enter a Student ID.",
             "error"
         );
-
 
         return;
 
@@ -1999,8 +1357,8 @@ function processManualID() {
 
 
     /*
-     Manual submission gets the
-     same scanner beep.
+    Manual submission also gives
+    the scanner beep.
     */
 
     playScannerBeep();
@@ -2011,49 +1369,47 @@ function processManualID() {
     );
 
 
-    input.value =
-        "";
+    input.value = "";
 
 }
 
 
 
-/* =========================================================
+/* =====================================================
    ENTER KEY
-========================================================= */
+===================================================== */
 
 document
-    .getElementById(
-        "studentIdInput"
-    )
-    .addEventListener(
-        "keydown",
-        function(event) {
+.getElementById(
+    "studentIdInput"
+)
+.addEventListener(
+    "keydown",
+    function(event) {
 
-            if (
-                event.key ===
-                "Enter"
-            ) {
+        if (
+            event.key ===
+            "Enter"
+        ) {
 
-                processManualID();
-
-            }
+            processManualID();
 
         }
-    );
+
+    }
+);
 
 
 
-/* =========================================================
-   QR SUCCESS
-=========================================================
+/* =====================================================
+   QR SCAN SUCCESS
 
    QR DETECTED
         ↓
-     BEEEEEP
+   IMMEDIATE BEEP
         ↓
    GOOGLE SHEETS
-========================================================= */
+===================================================== */
 
 function onScanSuccess(
     decodedText,
@@ -2061,20 +1417,20 @@ function onScanSuccess(
 ) {
 
     const now =
-        Date.now();
+    Date.now();
 
 
     /*
-     Prevent repeated detection
-     of the same QR.
+    Prevent repeated detection
+    of the same QR for 3 seconds.
     */
 
     if (
         decodedText ===
-            lastScannedCode &&
+        lastScannedCode &&
         now -
-            lastScanTime <
-            3000
+        lastScanTime <
+        3000
     ) {
 
         return;
@@ -2082,56 +1438,35 @@ function onScanSuccess(
     }
 
 
-    /*
-     Prevent another scan while
-     current scan is processing.
-    */
-
-    if (
-        isProcessing
-    ) {
-
+    if (isProcessing) {
         return;
-
     }
 
-
-    /*
-     Save scan information.
-    */
 
     lastScannedCode =
-        decodedText;
+    decodedText;
 
 
     lastScanTime =
-        now;
+    now;
 
 
     /*
-     ============================================
-     IMMEDIATE BEEP
-
-     THIS HAPPENS BEFORE GOOGLE SHEETS.
-
-     ============================================
+    BEEP IMMEDIATELY
+    WHEN QR IS DETECTED
     */
 
     playScannerBeep();
 
 
-    /*
-     Update scanner status.
-    */
-
     document.getElementById(
         "scannerStatus"
     ).textContent =
-        "QR code detected!";
+    "QR code detected!";
 
 
     /*
-     Now process the student.
+    Process after beep starts.
     */
 
     processStudent(
@@ -2142,62 +1477,54 @@ function onScanSuccess(
 
 
 
-/* =========================================================
-   QR FAILURE
-========================================================= */
+/* =====================================================
+   QR SCAN FAILURE
+===================================================== */
 
-function onScanFailure(
-    error
-) {
+function onScanFailure(error) {
 
     /*
-     Normal scanning failures
-     are ignored.
+    Normal scanning failures
+    are ignored.
     */
 
 }
 
 
 
-/* =========================================================
+/* =====================================================
    START QR SCANNER
-========================================================= */
+===================================================== */
 
 const html5QrCodeScanner =
-    new Html5QrcodeScanner(
+new Html5QrcodeScanner(
 
-        "reader",
+    "reader",
 
-        {
+    {
 
-            fps:
-                10,
+        fps: 10,
 
-            qrbox:
-                {
-                    width:
-                        250,
-
-                    height:
-                        250
-                },
-
-            rememberLastUsedCamera:
-                true,
-
-            supportedScanTypes:
-                [
-
-                    Html5QrcodeScanType
-                        .SCAN_TYPE_CAMERA
-
-                ]
-
+        qrbox: {
+            width: 250,
+            height: 250
         },
 
-        false
+        rememberLastUsedCamera:
+        true,
 
-    );
+        supportedScanTypes: [
+
+            Html5QrcodeScanType
+            .SCAN_TYPE_CAMERA
+
+        ]
+
+    },
+
+    false
+
+);
 
 
 html5QrCodeScanner.render(
@@ -2207,9 +1534,9 @@ html5QrCodeScanner.render(
 
 
 
-/* =========================================================
+/* =====================================================
    SAVE LOCAL RECORDS
-========================================================= */
+===================================================== */
 
 function saveRecords() {
 
@@ -2224,52 +1551,48 @@ function saveRecords() {
 
 
 
-/* =========================================================
+/* =====================================================
    DISPLAY ATTENDANCE
-========================================================= */
+===================================================== */
 
 function displayAttendance() {
 
     const table =
-        document.getElementById(
-            "attendanceTable"
-        );
+    document.getElementById(
+        "attendanceTable"
+    );
 
 
     const search =
-        document
-            .getElementById(
-                "searchInput"
-            )
-            .value
-            .toLowerCase();
+    document.getElementById(
+        "searchInput"
+    )
+    .value
+    .toLowerCase();
 
 
     const today =
-        getToday();
+    getToday();
 
 
     const todayRecords =
-        attendanceRecords.filter(
-            record =>
-                record.date ===
-                today
-        );
+    attendanceRecords.filter(
+        record =>
+        record.date ===
+        today
+    );
 
 
     const filteredRecords =
-        todayRecords.filter(
-            record =>
-                record.studentId
-                    .toLowerCase()
-                    .includes(
-                        search
-                    )
-        );
+    todayRecords.filter(
+        record =>
+        record.studentId
+        .toLowerCase()
+        .includes(search)
+    );
 
 
-    table.innerHTML =
-        "";
+    table.innerHTML = "";
 
 
     if (
@@ -2279,18 +1602,18 @@ function displayAttendance() {
 
         table.innerHTML = `
 
-            <tr>
+        <tr>
 
-                <td
-                    colspan="6"
-                    class="empty-state"
-                >
+            <td
+                colspan="6"
+                class="empty-state"
+            >
 
-                    No attendance records found.
+                No attendance records found.
 
-                </td>
+            </td>
 
-            </tr>
+        </tr>
 
         `;
 
@@ -2303,74 +1626,68 @@ function displayAttendance() {
             index
         ) => {
 
-
             const row =
-                document.createElement(
-                    "tr"
-                );
+            document.createElement(
+                "tr"
+            );
 
-
-            /*
-             COMPLETED requires
-             both Time In and Time Out.
-            */
 
             const completed =
-                record.timeIn &&
-                record.timeOut;
+            record.timeIn &&
+            record.timeOut;
 
 
             const statusClass =
-                completed
-                    ? "completed"
-                    : "present";
+            completed
+            ? "completed"
+            : "present";
 
 
             const statusText =
-                completed
-                    ? "COMPLETED"
-                    : "PRESENT";
+            completed
+            ? "COMPLETED"
+            : "PRESENT";
 
 
             row.innerHTML = `
 
-                <td>
-                    ${index + 1}
-                </td>
+            <td>
+                ${index + 1}
+            </td>
 
-                <td>
+            <td>
 
-                    <strong>
-                        ${escapeHTML(
-                            record.studentId
-                        )}
-                    </strong>
+                <strong>
+                    ${escapeHTML(
+                        record.studentId
+                    )}
+                </strong>
 
-                </td>
+            </td>
 
-                <td>
-                    ${record.date}
-                </td>
+            <td>
+                ${record.date}
+            </td>
 
-                <td>
-                    ${record.timeIn || "-"}
-                </td>
+            <td>
+                ${record.timeIn || "-"}
+            </td>
 
-                <td>
-                    ${record.timeOut || "-"}
-                </td>
+            <td>
+                ${record.timeOut || "-"}
+            </td>
 
-                <td>
+            <td>
 
-                    <span
-                        class="status-badge ${statusClass}"
-                    >
+                <span
+                    class="status-badge ${statusClass}"
+                >
 
-                        ${statusText}
+                    ${statusText}
 
-                    </span>
+                </span>
 
-                </td>
+            </td>
 
             `;
 
@@ -2389,62 +1706,62 @@ function displayAttendance() {
 
 
 
-/* =========================================================
-   UPDATE STATISTICS
-========================================================= */
+/* =====================================================
+   STATISTICS
+===================================================== */
 
 function updateStatistics() {
 
     const today =
-        getToday();
+    getToday();
 
 
     const todayRecords =
-        attendanceRecords.filter(
-            record =>
-                record.date ===
-                today
-        );
+    attendanceRecords.filter(
+        record =>
+        record.date ===
+        today
+    );
 
 
     const timeIn =
-        todayRecords.filter(
-            record =>
-                record.timeIn
-        ).length;
+    todayRecords.filter(
+        record =>
+        record.timeIn
+    ).length;
 
 
     const timeOut =
-        todayRecords.filter(
-            record =>
-                record.timeOut
-        ).length;
+    todayRecords.filter(
+        record =>
+        record.timeOut
+    ).length;
 
 
     document.getElementById(
         "totalStudents"
     ).textContent =
-        todayRecords.length;
+    todayRecords.length;
 
 
     document.getElementById(
         "timeInCount"
     ).textContent =
-        timeIn;
+    timeIn;
 
 
     document.getElementById(
         "timeOutCount"
     ).textContent =
-        timeOut;
+    timeOut;
 
 }
 
 
 
-/* =========================================================
+/* =====================================================
    MESSAGE
-========================================================= */
+===================================================== */
 
 function showMessage(
     text,
@@ -2452,25 +1769,25 @@ function showMessage(
 ) {
 
     const message =
-        document.getElementById(
-            "message"
-        );
+    document.getElementById(
+        "message"
+    );
 
 
     message.textContent =
-        text;
+    text;
 
 
     message.className =
-        "message " +
-        type;
+    "message " +
+    type;
 
 
     setTimeout(
         function() {
 
             message.className =
-                "message";
+            "message";
 
         },
         5000
@@ -2480,9 +1797,9 @@ function showMessage(
 
 
 
-/* =========================================================
+/* =====================================================
    STUDENT INFO
-========================================================= */
+===================================================== */
 
 function showStudentInfo(
     studentId,
@@ -2490,43 +1807,39 @@ function showStudentInfo(
 ) {
 
     const info =
-        document.getElementById(
-            "studentInfo"
-        );
+    document.getElementById(
+        "studentInfo"
+    );
 
 
     info.innerHTML = `
 
-        <strong>
-            Student ID:
-        </strong>
+    <strong>
+        Student ID:
+    </strong>
 
-        ${escapeHTML(
-            studentId
-        )}
+    ${escapeHTML(studentId)}
 
-        <br><br>
+    <br><br>
 
-        <strong>
-            Record:
-        </strong>
+    <strong>
+        Record:
+    </strong>
 
-        ${escapeHTML(
-            message
-        )}
+    ${escapeHTML(message)}
 
     `;
 
 
     info.style.display =
-        "block";
+    "block";
 
 
     setTimeout(
         function() {
 
             info.style.display =
-                "none";
+            "none";
 
         },
         5000
@@ -2536,22 +1849,20 @@ function showStudentInfo(
 
 
 
-/* =========================================================
+/* =====================================================
    HTML SECURITY
-========================================================= */
+===================================================== */
 
-function escapeHTML(
-    value
-) {
+function escapeHTML(value) {
 
     const div =
-        document.createElement(
-            "div"
-        );
+    document.createElement(
+        "div"
+    );
 
 
     div.textContent =
-        value;
+    value;
 
 
     return div.innerHTML;
@@ -2560,22 +1871,22 @@ function escapeHTML(
 
 
 
-/* =========================================================
+/* =====================================================
    EXPORT CSV
-========================================================= */
+===================================================== */
 
 function exportCSV() {
 
     const today =
-        getToday();
+    getToday();
 
 
     const records =
-        attendanceRecords.filter(
-            record =>
-                record.date ===
-                today
-        );
+    attendanceRecords.filter(
+        record =>
+        record.date ===
+        today
+    );
 
 
     if (
@@ -2585,12 +1896,10 @@ function exportCSV() {
 
         playErrorSound();
 
-
         showMessage(
             "There are no local attendance records to export.",
             "error"
         );
-
 
         return;
 
@@ -2598,53 +1907,53 @@ function exportCSV() {
 
 
     let csv =
-        "Student ID,Date,Time In,Time Out,Status\n";
+    "Student ID,Date,Time In,Time Out,Status\n";
 
 
     records.forEach(
         record => {
 
             csv +=
-                `"${record.studentId}",` +
-                `"${record.date}",` +
-                `"${record.timeIn}",` +
-                `"${record.timeOut}",` +
-                `"${record.status}"\n`;
+            `"${record.studentId}",` +
+            `"${record.date}",` +
+            `"${record.timeIn}",` +
+            `"${record.timeOut}",` +
+            `"${record.status}"\n`;
 
         }
     );
 
 
     const blob =
-        new Blob(
-            [csv],
-            {
-                type:
-                    "text/csv;charset=utf-8;"
-            }
-        );
+    new Blob(
+        [csv],
+        {
+            type:
+            "text/csv;charset=utf-8;"
+        }
+    );
 
 
     const url =
-        URL.createObjectURL(
-            blob
-        );
+    URL.createObjectURL(
+        blob
+    );
 
 
     const link =
-        document.createElement(
-            "a"
-        );
+    document.createElement(
+        "a"
+    );
 
 
     link.href =
-        url;
+    url;
 
 
     link.download =
-        "attendance-" +
-        today +
-        ".csv";
+    "attendance-" +
+    today +
+    ".csv";
 
 
     document.body.appendChild(
@@ -2674,39 +1983,37 @@ function exportCSV() {
 
 
 
-/* =========================================================
+/* =====================================================
    CLEAR LOCAL RECORDS
-========================================================= */
+===================================================== */
 
 function clearAttendance() {
 
     const confirmation =
-        confirm(
+    confirm(
 
-            "Are you sure you want to delete today's local attendance records?\n\n" +
+        "Are you sure you want to delete today's local attendance records?\n\n" +
 
-            "This will NOT delete records already saved in Google Sheets."
+        "This will NOT delete records already saved in Google Sheets."
 
-        );
+    );
 
 
     if (!confirmation) {
-
         return;
-
     }
 
 
     const today =
-        getToday();
+    getToday();
 
 
     attendanceRecords =
-        attendanceRecords.filter(
-            record =>
-                record.date !==
-                today
-        );
+    attendanceRecords.filter(
+        record =>
+        record.date !==
+        today
+    );
 
 
     saveRecords();
@@ -2724,14 +2031,13 @@ function clearAttendance() {
 
 
 
-/* =========================================================
+/* =====================================================
    INITIALIZE
-========================================================= */
+===================================================== */
 
 displayAttendance();
 
 </script>
-
 
 </body>
 
