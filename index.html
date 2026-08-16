@@ -105,6 +105,14 @@
             color: #6b7280;
         }
 
+        .connection-status {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #16a34a;
+            font-weight: bold;
+        }
+
         .manual-section {
             margin-top: 20px;
             border-top: 1px solid #e5e7eb;
@@ -148,6 +156,10 @@
             opacity: 0.9;
         }
 
+        button:active {
+            transform: scale(0.98);
+        }
+
         .primary-btn {
             background: #2563eb;
             color: white;
@@ -160,11 +172,6 @@
 
         .danger-btn {
             background: #dc2626;
-            color: white;
-        }
-
-        .secondary-btn {
-            background: #6b7280;
             color: white;
         }
 
@@ -267,10 +274,6 @@
             display: none;
         }
 
-        .student-info strong {
-            color: #111827;
-        }
-
         footer {
             text-align: center;
             color: #6b7280;
@@ -278,15 +281,7 @@
             padding: 25px;
         }
 
-        .connection-status {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #6b7280;
-        }
-
         @media (max-width: 800px) {
-
             .dashboard {
                 grid-template-columns: 1fr;
             }
@@ -298,7 +293,6 @@
             header h1 {
                 font-size: 23px;
             }
-
         }
     </style>
 </head>
@@ -311,8 +305,6 @@
 </header>
 
 <div class="container">
-
-    <!-- DASHBOARD -->
 
     <div class="dashboard">
 
@@ -336,7 +328,7 @@
 
     <div class="main-grid">
 
-        <!-- QR SCANNER -->
+        <!-- SCANNER -->
 
         <div class="card">
 
@@ -344,12 +336,15 @@
 
             <div id="reader"></div>
 
-            <div class="scanner-status" id="scannerStatus">
+            <div
+                class="scanner-status"
+                id="scannerStatus"
+            >
                 Camera scanner is ready.
             </div>
 
             <div class="connection-status">
-                Attendance database: Connected
+                ● Attendance database connected
             </div>
 
 
@@ -379,9 +374,16 @@
             </div>
 
 
-            <div id="message" class="message"></div>
+            <div
+                id="message"
+                class="message"
+            ></div>
 
-            <div id="studentInfo" class="student-info"></div>
+
+            <div
+                id="studentInfo"
+                class="student-info"
+            ></div>
 
         </div>
 
@@ -452,7 +454,7 @@
     </div>
 
 
-    <!-- LOCAL ATTENDANCE DISPLAY -->
+    <!-- ATTENDANCE TABLE -->
 
     <div class="card">
 
@@ -478,19 +480,12 @@
                 <thead>
 
                     <tr>
-
                         <th>#</th>
-
                         <th>Student ID</th>
-
                         <th>Date</th>
-
                         <th>Time In</th>
-
                         <th>Time Out</th>
-
                         <th>Status</th>
-
                     </tr>
 
                 </thead>
@@ -513,1105 +508,1341 @@
 
 <script>
 
-    /*
-    ============================================================
-       GOOGLE APPS SCRIPT WEB APP
-    ============================================================
-    */
+/*
+==============================================================
+GOOGLE APPS SCRIPT URL
+==============================================================
+*/
 
-    const SCRIPT_URL =
-        "https://script.google.com/macros/s/AKfycbyPWMqQzXUI50IiaMPOc8SK3mYl6vF8jF5Yg-4pstArZ_oVfuBAoJHwgvv65OT3hggCvQ/exec";
-
-
-    /*
-    ============================================================
-       SYSTEM VARIABLES
-    ============================================================
-    */
-
-    let attendanceMode = "TIME IN";
-
-    let attendanceRecords =
-        JSON.parse(
-            localStorage.getItem("attendanceRecords")
-        ) || [];
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbyPWMqQzXUI50IiaMPOc8SK3mYl6vF8jF5Yg-4pstArZ_oVfuBAoJHwgvv65OT3hggCvQ/exec";
 
 
-    let lastScannedCode = "";
+/*
+==============================================================
+SYSTEM VARIABLES
+==============================================================
+*/
 
-    let lastScanTime = 0;
+let attendanceMode = "TIME IN";
 
-    let isProcessing = false;
+let attendanceRecords =
+    JSON.parse(
+        localStorage.getItem("attendanceRecords")
+    ) || [];
 
+let lastScannedCode = "";
 
-    /*
-    ============================================================
-       DATE
-    ============================================================
-    */
+let lastScanTime = 0;
 
-    function getToday() {
-
-        const now = new Date();
-
-        const year =
-            now.getFullYear();
-
-        const month =
-            String(
-                now.getMonth() + 1
-            ).padStart(2, "0");
-
-        const day =
-            String(
-                now.getDate()
-            ).padStart(2, "0");
-
-        return `${year}-${month}-${day}`;
-
-    }
+let isProcessing = false;
 
 
-    /*
-    ============================================================
-       CURRENT TIME
-    ============================================================
-    */
+/*
+==============================================================
+AUDIO
+==============================================================
+*/
 
-    function getCurrentTime() {
+let audioContext = null;
 
-        const now = new Date();
 
-        return now.toLocaleTimeString(
-            [],
-            {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit"
+/*
+--------------------------------------------------------------
+INITIALIZE AUDIO
+--------------------------------------------------------------
+*/
+
+function initializeAudio() {
+
+    try {
+
+        if (!audioContext) {
+
+            const AudioContext =
+                window.AudioContext ||
+                window.webkitAudioContext;
+
+            if (AudioContext) {
+
+                audioContext =
+                    new AudioContext();
+
             }
+        }
+
+        if (
+            audioContext &&
+            audioContext.state === "suspended"
+        ) {
+
+            audioContext.resume();
+
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Audio initialization unavailable."
         );
 
     }
+}
 
 
-    /*
-    ============================================================
-       DISPLAY DATE
-    ============================================================
-    */
+/*
+--------------------------------------------------------------
+SUCCESS SOUND
+--------------------------------------------------------------
+*/
 
-    function getDisplayDate() {
+function playSuccessSound() {
 
-        const now = new Date();
+    try {
 
-        return now.toLocaleDateString(
-            [],
-            {
-                year: "numeric",
-                month: "long",
-                day: "numeric"
-            }
+        initializeAudio();
+
+        if (!audioContext) {
+            return;
+        }
+
+        const now =
+            audioContext.currentTime;
+
+        const oscillator =
+            audioContext.createOscillator();
+
+        const gainNode =
+            audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(
+            audioContext.destination
+        );
+
+        oscillator.type = "sine";
+
+        oscillator.frequency.setValueAtTime(
+            880,
+            now
+        );
+
+        oscillator.frequency.setValueAtTime(
+            1174.66,
+            now + 0.12
+        );
+
+        gainNode.gain.setValueAtTime(
+            0.0001,
+            now
+        );
+
+        gainNode.gain.exponentialRampToValueAtTime(
+            0.25,
+            now + 0.02
+        );
+
+        gainNode.gain.exponentialRampToValueAtTime(
+            0.0001,
+            now + 0.30
+        );
+
+        oscillator.start(now);
+
+        oscillator.stop(
+            now + 0.32
+        );
+
+    } catch (error) {
+
+        console.log(
+            "Success sound unavailable."
         );
 
     }
+}
 
+
+/*
+--------------------------------------------------------------
+ERROR SOUND
+--------------------------------------------------------------
+*/
+
+function playErrorSound() {
+
+    try {
+
+        initializeAudio();
+
+        if (!audioContext) {
+            return;
+        }
+
+        const now =
+            audioContext.currentTime;
+
+        const oscillator =
+            audioContext.createOscillator();
+
+        const gainNode =
+            audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(
+            audioContext.destination
+        );
+
+        oscillator.type = "sine";
+
+        oscillator.frequency.setValueAtTime(
+            300,
+            now
+        );
+
+        gainNode.gain.setValueAtTime(
+            0.0001,
+            now
+        );
+
+        gainNode.gain.exponentialRampToValueAtTime(
+            0.22,
+            now + 0.02
+        );
+
+        gainNode.gain.exponentialRampToValueAtTime(
+            0.0001,
+            now + 0.22
+        );
+
+        oscillator.start(now);
+
+        oscillator.stop(
+            now + 0.24
+        );
+
+    } catch (error) {
+
+        console.log(
+            "Error sound unavailable."
+        );
+
+    }
+}
+
+
+/*
+--------------------------------------------------------------
+ENABLE AUDIO AFTER USER INTERACTION
+--------------------------------------------------------------
+*/
+
+document.addEventListener(
+    "click",
+    function() {
+        initializeAudio();
+    }
+);
+
+
+/*
+==============================================================
+DATE
+==============================================================
+*/
+
+function getToday() {
+
+    const now =
+        new Date();
+
+    const year =
+        now.getFullYear();
+
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            now.getDate()
+        ).padStart(2, "0");
+
+    return (
+        year +
+        "-" +
+        month +
+        "-" +
+        day
+    );
+}
+
+
+/*
+==============================================================
+CURRENT TIME
+==============================================================
+*/
+
+function getCurrentTime() {
+
+    const now =
+        new Date();
+
+    return now.toLocaleTimeString(
+        [],
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        }
+    );
+}
+
+
+/*
+==============================================================
+DISPLAY DATE
+==============================================================
+*/
+
+function getDisplayDate() {
+
+    const now =
+        new Date();
+
+    return now.toLocaleDateString(
+        [],
+        {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        }
+    );
+}
+
+
+document.getElementById(
+    "currentDate"
+).textContent =
+    getDisplayDate();
+
+
+/*
+==============================================================
+ATTENDANCE MODE
+==============================================================
+*/
+
+function setAttendanceMode(mode) {
+
+    attendanceMode =
+        mode;
 
     document.getElementById(
-        "currentDate"
+        "modeDisplay"
     ).textContent =
-        getDisplayDate();
+        "Current Mode: " + mode;
+
+    showMessage(
+        "Attendance mode changed to " + mode,
+        "info"
+    );
+}
 
 
-    /*
-    ============================================================
-       SET ATTENDANCE MODE
-    ============================================================
-    */
+/*
+==============================================================
+SEND ATTENDANCE TO GOOGLE SHEETS
+==============================================================
+*/
 
-    function setAttendanceMode(mode) {
+async function sendAttendanceToSheet(studentId) {
 
-        attendanceMode = mode;
+    if (isProcessing) {
 
-        document.getElementById(
-            "modeDisplay"
-        ).textContent =
-            "Current Mode: " + mode;
+        return {
+            success: false,
+            message: "Please wait."
+        };
+
+    }
+
+    isProcessing = true;
+
+    try {
 
         showMessage(
-            "Attendance mode changed to " + mode,
+            "Processing attendance...",
             "info"
         );
 
-    }
 
+        const response =
+            await fetch(
+                SCRIPT_URL,
+                {
+                    method: "POST",
 
-    /*
-    ============================================================
-       SEND ATTENDANCE TO GOOGLE SHEETS
-    ============================================================
-    */
+                    headers: {
+                        "Content-Type":
+                            "text/plain;charset=utf-8"
+                    },
 
-    async function sendAttendanceToSheet(studentId) {
+                    body:
+                        JSON.stringify({
 
-        if (isProcessing) {
+                            studentId:
+                                studentId,
 
-            return {
-                success: false,
-                message: "Please wait."
-            };
+                            action:
+                                attendanceMode
 
-        }
-
-
-        isProcessing = true;
-
-
-        try {
-
-            showMessage(
-                "Processing attendance...",
-                "info"
+                        })
+                }
             );
 
-
-            const response =
-                await fetch(
-                    SCRIPT_URL,
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "text/plain;charset=utf-8"
-                        },
-
-                        body:
-                            JSON.stringify({
-
-                                studentId:
-                                    studentId,
-
-                                action:
-                                    attendanceMode
-
-                            })
-
-                    }
-                );
-
-
-            const result =
-                await response.json();
-
-
-            if (result.success) {
-
-                showMessage(
-                    result.message,
-                    "success"
-                );
-
-            } else {
-
-                showMessage(
-                    result.message,
-                    "error"
-                );
-
-            }
-
-
-            return result;
-
-
-        } catch (error) {
-
-            console.error(
-                "Attendance server error:",
-                error
-            );
-
-
-            showMessage(
-                "Unable to connect to the attendance database.",
-                "error"
-            );
-
-
-            return {
-                success: false,
-                message:
-                    "Unable to connect to the attendance database."
-            };
-
-
-        } finally {
-
-            isProcessing = false;
-
-        }
-
-    }
-
-
-    /*
-    ============================================================
-       PROCESS STUDENT
-    ============================================================
-    */
-
-    async function processStudent(studentId) {
-
-        if (!studentId) {
-
-            showMessage(
-                "Please enter a valid Student ID.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        studentId =
-            studentId.trim();
-
-
-        /*
-        Send the attendance directly
-        to Google Sheets.
-        */
 
         const result =
-            await sendAttendanceToSheet(
-                studentId
+            await response.json();
+
+
+        if (result.success) {
+
+            playSuccessSound();
+
+            showMessage(
+                result.message,
+                "success"
             );
 
+        } else {
 
-        /*
-        Only save/display a local
-        record if Google Sheets
-        successfully recorded it.
-        */
+            playErrorSound();
 
-        if (!result.success) {
-
-            return;
-
-        }
-
-
-        const today =
-            getToday();
-
-        const currentTime =
-            getCurrentTime();
-
-
-        let record =
-            attendanceRecords.find(
-                r =>
-                    r.studentId === studentId &&
-                    r.date === today
-            );
-
-
-        /*
-        ========================================================
-           LOCAL TIME IN
-        ========================================================
-        */
-
-        if (attendanceMode === "TIME IN") {
-
-            if (!record) {
-
-                record = {
-
-                    studentId:
-                        studentId,
-
-                    date:
-                        today,
-
-                    timeIn:
-                        currentTime,
-
-                    timeOut:
-                        "",
-
-                    status:
-                        "PRESENT"
-
-                };
-
-
-                attendanceRecords.push(
-                    record
-                );
-
-            }
-
-
-            showStudentInfo(
-                studentId,
-                "Time In recorded at " +
-                currentTime
+            showMessage(
+                result.message,
+                "error"
             );
 
         }
 
 
+        return result;
+
+
+    } catch (error) {
+
+        console.error(
+            "Attendance server error:",
+            error
+        );
+
+        playErrorSound();
+
+        showMessage(
+            "Unable to connect to the attendance database.",
+            "error"
+        );
+
+        return {
+
+            success: false,
+
+            message:
+                "Unable to connect to the attendance database."
+
+        };
+
+    } finally {
+
+        isProcessing = false;
+
+    }
+}
+
+
+/*
+==============================================================
+PROCESS STUDENT
+==============================================================
+*/
+
+async function processStudent(studentId) {
+
+    if (!studentId) {
+
+        playErrorSound();
+
+        showMessage(
+            "Please enter a valid Student ID.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    studentId =
+        studentId.trim();
+
+
+    /*
+    Send attendance to Google Sheets.
+    */
+
+    const result =
+        await sendAttendanceToSheet(
+            studentId
+        );
+
+
+    /*
+    Do not create a local record
+    if Google Sheets rejected it.
+    */
+
+    if (!result.success) {
+        return;
+    }
+
+
+    /*
+    Local display information.
+    */
+
+    const today =
+        getToday();
+
+    const currentTime =
+        getCurrentTime();
+
+
+    let record =
+        attendanceRecords.find(
+            r =>
+                r.studentId === studentId &&
+                r.date === today
+        );
+
+
+    /*
+    ==========================================================
+    TIME IN
+    ==========================================================
+    */
+
+    if (
+        attendanceMode === "TIME IN"
+    ) {
+
+        if (!record) {
+
+            record = {
+
+                studentId:
+                    studentId,
+
+                date:
+                    today,
+
+                timeIn:
+                    currentTime,
+
+                timeOut:
+                    "",
+
+                status:
+                    "PRESENT"
+
+            };
+
+            attendanceRecords.push(
+                record
+            );
+
+        }
+
+
         /*
-        ========================================================
-           LOCAL TIME OUT
-        ========================================================
+        If both are filled,
+        status is COMPLETED.
         */
 
-        else if (
-            attendanceMode === "TIME OUT"
+        if (
+            record.timeIn &&
+            record.timeOut
         ) {
 
-            if (record) {
+            record.status =
+                "COMPLETED";
 
-                record.timeOut =
-                    currentTime;
+        } else {
+
+            record.status =
+                "PRESENT";
+
+        }
+
+
+        showStudentInfo(
+            studentId,
+            "Time In recorded at " +
+            currentTime
+        );
+
+    }
+
+
+    /*
+    ==========================================================
+    TIME OUT
+    ==========================================================
+    */
+
+    else if (
+        attendanceMode === "TIME OUT"
+    ) {
+
+        if (record) {
+
+            record.timeOut =
+                currentTime;
+
+            /*
+            Both Time In and Time Out
+            are filled.
+            */
+
+            if (
+                record.timeIn &&
+                record.timeOut
+            ) {
 
                 record.status =
                     "COMPLETED";
 
             } else {
 
-                record = {
-
-                    studentId:
-                        studentId,
-
-                    date:
-                        today,
-
-                    timeIn:
-                        "",
-
-                    timeOut:
-                        currentTime,
-
-                    status:
-                        "COMPLETED"
-
-                };
-
-                attendanceRecords.push(
-                    record
-                );
+                record.status =
+                    "PRESENT";
 
             }
 
+        } else {
 
-            showStudentInfo(
-                studentId,
-                "Time Out recorded at " +
-                currentTime
+            /*
+            This normally won't happen because
+            the Apps Script prevents Time Out
+            without Time In.
+            */
+
+            record = {
+
+                studentId:
+                    studentId,
+
+                date:
+                    today,
+
+                timeIn:
+                    "",
+
+                timeOut:
+                    currentTime,
+
+                status:
+                    "PRESENT"
+
+            };
+
+            attendanceRecords.push(
+                record
             );
 
         }
 
 
-        saveRecords();
-
-        displayAttendance();
-
-    }
-
-
-    /*
-    ============================================================
-       MANUAL STUDENT ID
-    ============================================================
-    */
-
-    function processManualID() {
-
-        const input =
-            document.getElementById(
-                "studentIdInput"
-            );
-
-
-        const studentId =
-            input.value.trim();
-
-
-        if (!studentId) {
-
-            showMessage(
-                "Please enter a Student ID.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        processStudent(
-            studentId
+        showStudentInfo(
+            studentId,
+            "Time Out recorded at " +
+            currentTime
         );
 
-
-        input.value = "";
-
     }
 
 
-    /*
-    ============================================================
-       ENTER KEY
-    ============================================================
-    */
+    saveRecords();
 
-    document
-        .getElementById(
+    displayAttendance();
+}
+
+
+/*
+==============================================================
+MANUAL ID
+==============================================================
+*/
+
+function processManualID() {
+
+    const input =
+        document.getElementById(
             "studentIdInput"
-        )
-        .addEventListener(
-            "keydown",
-            function(event) {
-
-                if (
-                    event.key === "Enter"
-                ) {
-
-                    processManualID();
-
-                }
-
-            }
         );
 
-
-    /*
-    ============================================================
-       QR CODE SUCCESS
-    ============================================================
-    */
-
-    function onScanSuccess(
-        decodedText,
-        decodedResult
-    ) {
-
-        const now =
-            Date.now();
+    const studentId =
+        input.value.trim();
 
 
-        /*
-        Prevent repeated scans
-        of the same QR code.
-        */
+    if (!studentId) {
 
-        if (
-            decodedText ===
-                lastScannedCode &&
-            now - lastScanTime <
-                3000
-        ) {
+        playErrorSound();
 
-            return;
-
-        }
-
-
-        /*
-        Prevent another scan while
-        the current request is being
-        processed.
-        */
-
-        if (isProcessing) {
-
-            return;
-
-        }
-
-
-        lastScannedCode =
-            decodedText;
-
-        lastScanTime =
-            now;
-
-
-        processStudent(
-            decodedText
+        showMessage(
+            "Please enter a Student ID.",
+            "error"
         );
 
+        return;
     }
 
 
-    /*
-    ============================================================
-       QR SCANNER FAILURE
-    ============================================================
-    */
-
-    function onScanFailure(error) {
-
-        /*
-        Scanner continuously produces
-        small errors while looking for
-        a QR code.
-
-        These are intentionally ignored.
-        */
-
-    }
-
-
-    /*
-    ============================================================
-       START QR SCANNER
-    ============================================================
-    */
-
-    const html5QrCodeScanner =
-        new Html5QrcodeScanner(
-
-            "reader",
-
-            {
-
-                fps: 10,
-
-                qrbox: {
-                    width: 250,
-                    height: 250
-                },
-
-                rememberLastUsedCamera:
-                    true,
-
-                supportedScanTypes: [
-
-                    Html5QrcodeScanType
-                        .SCAN_TYPE_CAMERA
-
-                ]
-
-            },
-
-            false
-
-        );
-
-
-    html5QrCodeScanner.render(
-        onScanSuccess,
-        onScanFailure
+    processStudent(
+        studentId
     );
 
 
-    /*
-    ============================================================
-       SAVE LOCAL RECORDS
-    ============================================================
-    */
-
-    function saveRecords() {
-
-        localStorage.setItem(
-            "attendanceRecords",
-            JSON.stringify(
-                attendanceRecords
-            )
-        );
-
-    }
+    input.value = "";
+}
 
 
-    /*
-    ============================================================
-       DISPLAY LOCAL ATTENDANCE
-    ============================================================
-    */
+/*
+==============================================================
+ENTER KEY
+==============================================================
+*/
 
-    function displayAttendance() {
+document
+    .getElementById(
+        "studentIdInput"
+    )
+    .addEventListener(
+        "keydown",
+        function(event) {
 
-        const table =
-            document.getElementById(
-                "attendanceTable"
-            );
+            if (
+                event.key === "Enter"
+            ) {
 
-
-        const search =
-            document
-                .getElementById(
-                    "searchInput"
-                )
-                .value
-                .toLowerCase();
-
-
-        const today =
-            getToday();
-
-
-        const todayRecords =
-            attendanceRecords.filter(
-                record =>
-                    record.date === today
-            );
-
-
-        const filteredRecords =
-            todayRecords.filter(
-                record =>
-                    record.studentId
-                        .toLowerCase()
-                        .includes(search)
-            );
-
-
-        table.innerHTML = "";
-
-
-        if (
-            filteredRecords.length === 0
-        ) {
-
-            table.innerHTML = `
-
-                <tr>
-
-                    <td
-                        colspan="6"
-                        class="empty-state"
-                    >
-                        No attendance records found.
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
-
-
-        filteredRecords.forEach(
-            (record, index) => {
-
-                const row =
-                    document.createElement(
-                        "tr"
-                    );
-
-
-                const statusClass =
-                    record.timeOut
-                        ? "time-out"
-                        : "present";
-
-
-                row.innerHTML = `
-
-                    <td>
-                        ${index + 1}
-                    </td>
-
-                    <td>
-
-                        <strong>
-                            ${escapeHTML(
-                                record.studentId
-                            )}
-                        </strong>
-
-                    </td>
-
-                    <td>
-                        ${record.date}
-                    </td>
-
-                    <td>
-                        ${record.timeIn || "-"}
-                    </td>
-
-                    <td>
-                        ${record.timeOut || "-"}
-                    </td>
-
-                    <td>
-
-                        <span
-                            class="status-badge ${statusClass}"
-                        >
-
-                            ${
-                                record.timeOut
-                                    ? "COMPLETED"
-                                    : "PRESENT"
-                            }
-
-                        </span>
-
-                    </td>
-
-                `;
-
-
-                table.appendChild(
-                    row
-                );
+                processManualID();
 
             }
-        );
+
+        }
+    );
 
 
-        updateStatistics();
+/*
+==============================================================
+QR SCANNER SUCCESS
+==============================================================
+*/
 
-    }
+function onScanSuccess(
+    decodedText,
+    decodedResult
+) {
 
-
-    /*
-    ============================================================
-       UPDATE DASHBOARD
-    ============================================================
-    */
-
-    function updateStatistics() {
-
-        const today =
-            getToday();
-
-
-        const todayRecords =
-            attendanceRecords.filter(
-                record =>
-                    record.date === today
-            );
-
-
-        const timeIn =
-            todayRecords.filter(
-                record =>
-                    record.timeIn
-            ).length;
-
-
-        const timeOut =
-            todayRecords.filter(
-                record =>
-                    record.timeOut
-            ).length;
-
-
-        document.getElementById(
-            "totalStudents"
-        ).textContent =
-            todayRecords.length;
-
-
-        document.getElementById(
-            "timeInCount"
-        ).textContent =
-            timeIn;
-
-
-        document.getElementById(
-            "timeOutCount"
-        ).textContent =
-            timeOut;
-
-    }
+    const now =
+        Date.now();
 
 
     /*
-    ============================================================
-       SHOW MESSAGE
-    ============================================================
+    Prevent duplicate scan
+    within 3 seconds.
     */
 
-    function showMessage(
-        text,
-        type
+    if (
+        decodedText === lastScannedCode &&
+        now - lastScanTime < 3000
     ) {
 
-        const message =
-            document.getElementById(
-                "message"
-            );
+        return;
+
+    }
 
 
-        message.textContent =
-            text;
+    /*
+    Don't process another student
+    while current request is running.
+    */
+
+    if (isProcessing) {
+        return;
+    }
 
 
-        message.className =
-            "message " + type;
+    lastScannedCode =
+        decodedText;
+
+    lastScanTime =
+        now;
 
 
-        setTimeout(
-            () => {
+    processStudent(
+        decodedText
+    );
+}
 
-                message.className =
-                    "message";
 
+/*
+==============================================================
+QR SCANNER FAILURE
+==============================================================
+*/
+
+function onScanFailure(error) {
+
+    /*
+    Normal scanner detection errors
+    are ignored.
+    */
+
+}
+
+
+/*
+==============================================================
+START QR SCANNER
+==============================================================
+*/
+
+const html5QrCodeScanner =
+    new Html5QrcodeScanner(
+        "reader",
+        {
+            fps: 10,
+
+            qrbox: {
+                width: 250,
+                height: 250
             },
-            5000
+
+            rememberLastUsedCamera: true,
+
+            supportedScanTypes: [
+                Html5QrcodeScanType
+                    .SCAN_TYPE_CAMERA
+            ]
+        },
+        false
+    );
+
+
+html5QrCodeScanner.render(
+    onScanSuccess,
+    onScanFailure
+);
+
+
+/*
+==============================================================
+LOCAL STORAGE
+==============================================================
+*/
+
+function saveRecords() {
+
+    localStorage.setItem(
+        "attendanceRecords",
+        JSON.stringify(
+            attendanceRecords
+        )
+    );
+}
+
+
+/*
+==============================================================
+DISPLAY ATTENDANCE
+==============================================================
+*/
+
+function displayAttendance() {
+
+    const table =
+        document.getElementById(
+            "attendanceTable"
         );
 
-    }
+
+    const search =
+        document
+            .getElementById(
+                "searchInput"
+            )
+            .value
+            .toLowerCase();
 
 
-    /*
-    ============================================================
-       SHOW STUDENT INFORMATION
-    ============================================================
-    */
+    const today =
+        getToday();
 
-    function showStudentInfo(
-        studentId,
-        message
+
+    const todayRecords =
+        attendanceRecords.filter(
+            record =>
+                record.date === today
+        );
+
+
+    const filteredRecords =
+        todayRecords.filter(
+            record =>
+                record.studentId
+                    .toLowerCase()
+                    .includes(search)
+        );
+
+
+    table.innerHTML = "";
+
+
+    if (
+        filteredRecords.length === 0
     ) {
 
-        const info =
-            document.getElementById(
-                "studentInfo"
-            );
+        table.innerHTML = `
 
+            <tr>
 
-        info.innerHTML = `
+                <td
+                    colspan="6"
+                    class="empty-state"
+                >
+                    No attendance records found.
+                </td>
 
-            <strong>
-                Student ID:
-            </strong>
-
-            ${escapeHTML(
-                studentId
-            )}
-
-            <br><br>
-
-            <strong>
-                Record:
-            </strong>
-
-            ${escapeHTML(
-                message
-            )}
+            </tr>
 
         `;
 
-
-        info.style.display =
-            "block";
-
-
-        setTimeout(
-            () => {
-
-                info.style.display =
-                    "none";
-
-            },
-            5000
-        );
-
     }
 
 
-    /*
-    ============================================================
-       HTML SECURITY
-    ============================================================
-    */
+    filteredRecords.forEach(
+        (record, index) => {
 
-    function escapeHTML(
-        value
-    ) {
+            const row =
+                document.createElement(
+                    "tr"
+                );
 
-        const div =
-            document.createElement(
-                "div"
+
+            /*
+            Status is COMPLETED only
+            when both times exist.
+            */
+
+            const completed =
+                record.timeIn &&
+                record.timeOut;
+
+
+            const statusClass =
+                completed
+                    ? "time-out"
+                    : "present";
+
+
+            const statusText =
+                completed
+                    ? "COMPLETED"
+                    : "PRESENT";
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td>
+                    <strong>
+                        ${escapeHTML(
+                            record.studentId
+                        )}
+                    </strong>
+                </td>
+
+                <td>
+                    ${record.date}
+                </td>
+
+                <td>
+                    ${record.timeIn || "-"}
+                </td>
+
+                <td>
+                    ${record.timeOut || "-"}
+                </td>
+
+                <td>
+
+                    <span
+                        class="status-badge ${statusClass}"
+                    >
+                        ${statusText}
+                    </span>
+
+                </td>
+
+            `;
+
+
+            table.appendChild(
+                row
             );
-
-
-        div.textContent =
-            value;
-
-
-        return div.innerHTML;
-
-    }
-
-
-    /*
-    ============================================================
-       EXPORT LOCAL CSV
-    ============================================================
-    */
-
-    function exportCSV() {
-
-        const today =
-            getToday();
-
-
-        const records =
-            attendanceRecords.filter(
-                record =>
-                    record.date === today
-            );
-
-
-        if (
-            records.length === 0
-        ) {
-
-            showMessage(
-                "There are no local attendance records to export.",
-                "error"
-            );
-
-            return;
 
         }
+    );
 
 
-        let csv =
-            "Student ID,Date,Time In,Time Out,Status\n";
+    updateStatistics();
+}
 
 
-        records.forEach(
-            record => {
+/*
+==============================================================
+DASHBOARD
+==============================================================
+*/
 
-                csv +=
+function updateStatistics() {
 
-                    `"${record.studentId}",` +
-                    `"${record.date}",` +
-                    `"${record.timeIn}",` +
-                    `"${record.timeOut}",` +
-                    `"${record.status}"\n`;
+    const today =
+        getToday();
 
+
+    const todayRecords =
+        attendanceRecords.filter(
+            record =>
+                record.date === today
+        );
+
+
+    const timeIn =
+        todayRecords.filter(
+            record =>
+                record.timeIn
+        ).length;
+
+
+    const timeOut =
+        todayRecords.filter(
+            record =>
+                record.timeOut
+        ).length;
+
+
+    document.getElementById(
+        "totalStudents"
+    ).textContent =
+        todayRecords.length;
+
+
+    document.getElementById(
+        "timeInCount"
+    ).textContent =
+        timeIn;
+
+
+    document.getElementById(
+        "timeOutCount"
+    ).textContent =
+        timeOut;
+}
+
+
+/*
+==============================================================
+MESSAGES
+==============================================================
+*/
+
+function showMessage(
+    text,
+    type
+) {
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+
+    message.textContent =
+        text;
+
+
+    message.className =
+        "message " + type;
+
+
+    setTimeout(
+        function() {
+
+            message.className =
+                "message";
+
+        },
+        5000
+    );
+}
+
+
+/*
+==============================================================
+STUDENT INFORMATION
+==============================================================
+*/
+
+function showStudentInfo(
+    studentId,
+    message
+) {
+
+    const info =
+        document.getElementById(
+            "studentInfo"
+        );
+
+
+    info.innerHTML = `
+
+        <strong>
+            Student ID:
+        </strong>
+
+        ${escapeHTML(
+            studentId
+        )}
+
+        <br><br>
+
+        <strong>
+            Record:
+        </strong>
+
+        ${escapeHTML(
+            message
+        )}
+
+    `;
+
+
+    info.style.display =
+        "block";
+
+
+    setTimeout(
+        function() {
+
+            info.style.display =
+                "none";
+
+        },
+        5000
+    );
+}
+
+
+/*
+==============================================================
+SECURITY
+==============================================================
+*/
+
+function escapeHTML(value) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        value;
+
+    return div.innerHTML;
+}
+
+
+/*
+==============================================================
+EXPORT CSV
+==============================================================
+*/
+
+function exportCSV() {
+
+    const today =
+        getToday();
+
+
+    const records =
+        attendanceRecords.filter(
+            record =>
+                record.date === today
+        );
+
+
+    if (
+        records.length === 0
+    ) {
+
+        playErrorSound();
+
+        showMessage(
+            "There are no local attendance records to export.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    let csv =
+        "Student ID,Date,Time In,Time Out,Status\n";
+
+
+    records.forEach(
+        record => {
+
+            csv +=
+                `"${record.studentId}",` +
+                `"${record.date}",` +
+                `"${record.timeIn}",` +
+                `"${record.timeOut}",` +
+                `"${record.status}"\n`;
+
+        }
+    );
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
             }
         );
 
 
-        const blob =
-            new Blob(
-                [csv],
-                {
-                    type:
-                        "text/csv;charset=utf-8;"
-                }
-            );
-
-
-        const url =
-            URL.createObjectURL(
-                blob
-            );
-
-
-        const link =
-            document.createElement(
-                "a"
-            );
-
-
-        link.href =
-            url;
-
-
-        link.download =
-            "attendance-" +
-            today +
-            ".csv";
-
-
-        document.body.appendChild(
-            link
+    const url =
+        URL.createObjectURL(
+            blob
         );
 
 
-        link.click();
-
-
-        document.body.removeChild(
-            link
+    const link =
+        document.createElement(
+            "a"
         );
 
 
-        URL.revokeObjectURL(
-            url
+    link.href =
+        url;
+
+
+    link.download =
+        "attendance-" +
+        today +
+        ".csv";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    playSuccessSound();
+
+
+    showMessage(
+        "Attendance CSV exported successfully.",
+        "success"
+    );
+}
+
+
+/*
+==============================================================
+CLEAR LOCAL RECORDS
+==============================================================
+*/
+
+function clearAttendance() {
+
+    const confirmation =
+        confirm(
+            "Are you sure you want to delete today's local attendance records?\n\n" +
+            "This will NOT delete records already saved in Google Sheets."
         );
 
 
-        showMessage(
-            "Attendance CSV exported successfully.",
-            "success"
-        );
-
+    if (!confirmation) {
+        return;
     }
 
 
-    /*
-    ============================================================
-       CLEAR LOCAL RECORDS
-    ============================================================
-    */
-
-    function clearAttendance() {
-
-        const confirmation =
-            confirm(
-                "Are you sure you want to delete today's local attendance records?\n\n" +
-                "This will NOT delete the records already saved in Google Sheets."
-            );
+    const today =
+        getToday();
 
 
-        if (!confirmation) {
-
-            return;
-
-        }
-
-
-        const today =
-            getToday();
-
-
-        attendanceRecords =
-            attendanceRecords.filter(
-                record =>
-                    record.date !== today
-            );
-
-
-        saveRecords();
-
-        displayAttendance();
-
-
-        showMessage(
-            "Today's local records have been cleared.",
-            "success"
+    attendanceRecords =
+        attendanceRecords.filter(
+            record =>
+                record.date !== today
         );
 
-    }
 
-
-    /*
-    ============================================================
-       INITIALIZE
-    ============================================================
-    */
+    saveRecords();
 
     displayAttendance();
+
+
+    showMessage(
+        "Today's local records have been cleared.",
+        "success"
+    );
+}
+
+
+/*
+==============================================================
+INITIALIZE
+==============================================================
+*/
+
+displayAttendance();
 
 </script>
 
 </body>
 </html>
-```
