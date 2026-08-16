@@ -5,7 +5,10 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
 <title>Student Attendance Scanner</title>
 
@@ -339,7 +342,6 @@ Automated QR Code Attendance Scanner
 </header>
 
 
-
 <div class="container">
 
 
@@ -348,7 +350,6 @@ Automated QR Code Attendance Scanner
 ===================================================== -->
 
 <div class="dashboard">
-
 
 <div class="stat-card">
 
@@ -388,9 +389,7 @@ Time Out
 
 </div>
 
-
 </div>
-
 
 
 <!-- =====================================================
@@ -398,7 +397,6 @@ Time Out
 ===================================================== -->
 
 <div class="main-grid">
-
 
 
 <!-- =====================================================
@@ -431,7 +429,6 @@ Camera scanner is ready.
 </div>
 
 
-
 <!-- MANUAL ID -->
 
 <div class="manual-section">
@@ -442,7 +439,6 @@ Or Enter Student ID Manually
 
 
 <div class="input-group">
-
 
 <input
     type="text"
@@ -459,11 +455,9 @@ Submit
 
 </button>
 
-
 </div>
 
 </div>
-
 
 
 <!-- MESSAGE -->
@@ -474,7 +468,6 @@ Submit
 </div>
 
 
-
 <!-- STUDENT INFO -->
 
 <div
@@ -482,9 +475,7 @@ Submit
     class="student-info">
 </div>
 
-
 </div>
-
 
 
 <!-- =====================================================
@@ -510,11 +501,9 @@ Today:
 </div>
 
 
-
 <!-- MODE BUTTONS -->
 
 <div class="action-buttons">
-
 
 <button
     class="success-btn"
@@ -533,9 +522,7 @@ Today:
 
 </button>
 
-
 </div>
-
 
 
 <!-- CURRENT MODE -->
@@ -550,11 +537,9 @@ Current Mode: TIME IN
 </div>
 
 
-
 <!-- CONTROL BUTTONS -->
 
 <div class="action-buttons">
-
 
 <button
     id="soundButton"
@@ -583,9 +568,7 @@ Current Mode: TIME IN
 
 </button>
 
-
 </div>
-
 
 
 <div
@@ -597,12 +580,9 @@ Sound is disabled. Click Enable Sound before scanning.
 
 </div>
 
-
 </div>
 
-
 </div>
-
 
 
 <!-- =====================================================
@@ -626,7 +606,6 @@ Sound is disabled. Click Enable Sound before scanning.
     style="width:100%;">
 
 </div>
-
 
 
 <div class="table-container">
@@ -673,16 +652,13 @@ Status
 <tbody id="attendanceTable">
 </tbody>
 
-
 </table>
 
 </div>
 
 </div>
 
-
 </div>
-
 
 
 <footer>
@@ -690,7 +666,6 @@ Status
 Automated Student Attendance System
 
 </footer>
-
 
 
 <script>
@@ -702,7 +677,6 @@ Automated Student Attendance System
 
 const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyPWMqQzXUI50IiaMPOc8SK3mYl6vF8jF5Yg-4pstArZ_oVfuBAoJHwgvv65OT3hggCvQ/exec";
-
 
 
 /* =====================================================
@@ -733,7 +707,6 @@ let isProcessing =
 false;
 
 
-
 /* =====================================================
    AUDIO
 ===================================================== */
@@ -744,7 +717,6 @@ null;
 
 let soundEnabled =
 false;
-
 
 
 /* =====================================================
@@ -791,7 +763,7 @@ function enableSound() {
 
 
         soundEnabled =
-            true;
+        true;
 
 
         const button =
@@ -812,12 +784,8 @@ function enableSound() {
         document.getElementById(
             "soundStatus"
         ).textContent =
-            "Sound enabled. Scanner beep is ready.";
+        "Sound enabled. Scanner beep is ready.";
 
-
-        /*
-         * Small test beep
-         */
 
         playScannerBeep();
 
@@ -835,13 +803,8 @@ function enableSound() {
 }
 
 
-
 /* =====================================================
    SCANNER BEEP
-   HIGH PITCH
-   2200 Hz
-   0.30 SECOND
-   VOLUME 0.35
 ===================================================== */
 
 function playScannerBeep() {
@@ -900,19 +863,11 @@ function playScannerBeep() {
         );
 
 
-        /*
-         * Start quietly
-         */
-
         gainNode.gain.setValueAtTime(
             0.0001,
             now
         );
 
-
-        /*
-         * Volume = 0.35
-         */
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.35,
@@ -920,19 +875,11 @@ function playScannerBeep() {
         );
 
 
-        /*
-         * Hold
-         */
-
         gainNode.gain.setValueAtTime(
             0.35,
             now + 0.25
         );
 
-
-        /*
-         * Short fade
-         */
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
@@ -961,7 +908,6 @@ function playScannerBeep() {
     }
 
 }
-
 
 
 /* =====================================================
@@ -1055,7 +1001,6 @@ function playErrorSound() {
 }
 
 
-
 /* =====================================================
    TODAY
 ===================================================== */
@@ -1099,7 +1044,6 @@ function getToday() {
 }
 
 
-
 /* =====================================================
    CURRENT TIME
 ===================================================== */
@@ -1120,7 +1064,6 @@ function getCurrentTime() {
     );
 
 }
-
 
 
 /* =====================================================
@@ -1148,8 +1091,7 @@ function getDisplayDate() {
 document.getElementById(
     "currentDate"
 ).textContent =
-    getDisplayDate();
-
+getDisplayDate();
 
 
 /* =====================================================
@@ -1167,8 +1109,8 @@ function setAttendanceMode(
     document.getElementById(
         "modeDisplay"
     ).textContent =
-        "Current Mode: " +
-        mode;
+    "Current Mode: " +
+    mode;
 
 
     showMessage(
@@ -1178,7 +1120,6 @@ function setAttendanceMode(
     );
 
 }
-
 
 
 /* =====================================================
@@ -1194,10 +1135,10 @@ async function sendAttendanceToSheet(
         return {
 
             success:
-                false,
+            false,
 
             message:
-                "Please wait."
+            "Please wait."
 
         };
 
@@ -1205,7 +1146,7 @@ async function sendAttendanceToSheet(
 
 
     isProcessing =
-        true;
+    true;
 
 
     try {
@@ -1222,25 +1163,25 @@ async function sendAttendanceToSheet(
                 {
 
                     method:
-                        "POST",
+                    "POST",
 
                     headers: {
 
                         "Content-Type":
-                            "text/plain;charset=utf-8"
+                        "text/plain;charset=utf-8"
 
                     },
 
                     body:
-                        JSON.stringify({
+                    JSON.stringify({
 
-                            studentId:
-                                studentId,
+                        studentId:
+                        studentId,
 
-                            action:
-                                attendanceMode
+                        action:
+                        attendanceMode
 
-                        })
+                    })
 
                 }
             );
@@ -1249,6 +1190,16 @@ async function sendAttendanceToSheet(
         const result =
             await response.json();
 
+
+        console.log(
+            "Server response:",
+            result
+        );
+
+
+        /*
+         * Successful request.
+         */
 
         if (
             result.success
@@ -1261,16 +1212,28 @@ async function sendAttendanceToSheet(
 
         }
 
-        else {
+        /*
+         * Duplicate or already-completed
+         * attendance.
+         */
 
-            /*
-             * Server may return success:false
-             * for duplicate attendance.
-             */
+        else {
 
             if (
                 result.status ===
                 "COMPLETED"
+            ) {
+
+                showMessage(
+                    result.message,
+                    "info"
+                );
+
+            }
+
+            else if (
+                result.status ===
+                "INCOMPLETE"
             ) {
 
                 showMessage(
@@ -1318,10 +1281,10 @@ async function sendAttendanceToSheet(
         return {
 
             success:
-                false,
+            false,
 
             message:
-                "Unable to connect to the attendance database."
+            "Unable to connect to the attendance database."
 
         };
 
@@ -1330,12 +1293,11 @@ async function sendAttendanceToSheet(
     finally {
 
         isProcessing =
-            false;
+        false;
 
     }
 
 }
-
 
 
 /* =====================================================
@@ -1367,7 +1329,7 @@ async function processStudent(
 
 
     /*
-     * First send to Google Sheets.
+     * Send to Google Apps Script first.
      */
 
     const result =
@@ -1377,14 +1339,17 @@ async function processStudent(
 
 
     /*
-     * If the server rejected the scan,
-     * don't create a new local record.
+     * If server rejected the request,
+     * do not create a new local record.
+     *
+     * INCOMPLETE and COMPLETED are still
+     * valid server states and are handled below.
      */
 
     if (
         !result.success &&
-        result.status !==
-        "COMPLETED"
+        result.status !== "COMPLETED" &&
+        result.status !== "INCOMPLETE"
     ) {
 
         return;
@@ -1414,7 +1379,6 @@ async function processStudent(
         );
 
 
-
     /* =================================================
        TIME IN
     ================================================= */
@@ -1426,36 +1390,37 @@ async function processStudent(
 
 
         /*
-         * If server says already completed,
-         * don't overwrite it.
+         * Server says attendance is
+         * already COMPLETED.
          */
 
         if (
             result.status ===
-            "COMPLETED" &&
-            result.timeIn &&
-            result.timeOut
+            "COMPLETED"
         ) {
 
             record = {
 
                 studentId:
-                    studentId,
+                studentId,
 
                 date:
-                    today,
+                today,
 
                 timeIn:
-                    result.timeIn,
+                result.timeIn ||
+                "",
 
                 timeOut:
-                    result.timeOut,
+                result.timeOut ||
+                "",
 
                 remark:
-                    result.remark || "",
+                result.remark ||
+                "",
 
                 status:
-                    "COMPLETED"
+                "COMPLETED"
 
             };
 
@@ -1480,9 +1445,64 @@ async function processStudent(
         }
 
 
+        /*
+         * Server says INCOMPLETE.
+         *
+         * This means there is already a Time Out
+         * without a Time In.
+         */
+
+        if (
+            result.status ===
+            "INCOMPLETE"
+        ) {
+
+            record = {
+
+                studentId:
+                studentId,
+
+                date:
+                today,
+
+                timeIn:
+                "",
+
+                timeOut:
+                result.timeOut ||
+                "",
+
+                remark:
+                "NO TIME IN",
+
+                status:
+                "INCOMPLETE"
+
+            };
+
+
+            updateLocalRecord(
+                record
+            );
+
+
+            showStudentInfo(
+                studentId,
+                "Attendance is INCOMPLETE — NO TIME IN."
+            );
+
+
+            saveRecords();
+
+            displayAttendance();
+
+            return;
+
+        }
+
 
         /*
-         * Create normal Time In record.
+         * Normal Time In.
          */
 
         if (!record) {
@@ -1490,23 +1510,23 @@ async function processStudent(
             record = {
 
                 studentId:
-                    studentId,
+                studentId,
 
                 date:
-                    today,
+                today,
 
                 timeIn:
-                    result.timeIn ||
-                    currentTime,
+                result.timeIn ||
+                currentTime,
 
                 timeOut:
-                    "",
+                "",
 
                 remark:
-                    "",
+                "",
 
                 status:
-                    "PRESENT"
+                "PRESENT"
 
             };
 
@@ -1525,27 +1545,12 @@ async function processStudent(
                 currentTime;
 
 
-            /*
-             * If Time Out already exists,
-             * mark completed.
-             */
+            record.remark =
+                "";
 
-            if (
-                record.timeIn &&
-                record.timeOut
-            ) {
 
-                record.status =
-                    "COMPLETED";
-
-            }
-
-            else {
-
-                record.status =
-                    "PRESENT";
-
-            }
+            record.status =
+                "PRESENT";
 
         }
 
@@ -1556,11 +1561,11 @@ async function processStudent(
             (
                 result.timeIn ||
                 currentTime
-            )
+            ) +
+            " — PRESENT"
         );
 
     }
-
 
 
     /* =================================================
@@ -1574,7 +1579,140 @@ async function processStudent(
 
 
         /*
-         * Student already has a local record.
+         * NO TIME IN
+         *
+         * This is the important rule:
+         *
+         * Time Out exists
+         * Time In does not exist
+         *
+         * Therefore:
+         *
+         * STATUS = INCOMPLETE
+         */
+
+        if (
+            result.status ===
+            "INCOMPLETE" ||
+            result.remark ===
+            "NO TIME IN"
+        ) {
+
+            record = {
+
+                studentId:
+                studentId,
+
+                date:
+                today,
+
+                timeIn:
+                "",
+
+                timeOut:
+                result.timeOut ||
+                currentTime,
+
+                remark:
+                "NO TIME IN",
+
+                status:
+                "INCOMPLETE"
+
+            };
+
+
+            updateLocalRecord(
+                record
+            );
+
+
+            showStudentInfo(
+                studentId,
+                "Time Out recorded at " +
+                (
+                    result.timeOut ||
+                    currentTime
+                ) +
+                " — NO TIME IN — INCOMPLETE"
+            );
+
+
+            saveRecords();
+
+            displayAttendance();
+
+            return;
+
+        }
+
+
+        /*
+         * NORMAL COMPLETED ATTENDANCE
+         */
+
+        if (
+            result.status ===
+            "COMPLETED"
+        ) {
+
+            record = {
+
+                studentId:
+                studentId,
+
+                date:
+                today,
+
+                timeIn:
+                result.timeIn ||
+                (
+                    record
+                    ? record.timeIn
+                    : ""
+                ),
+
+                timeOut:
+                result.timeOut ||
+                currentTime,
+
+                remark:
+                "",
+
+                status:
+                "COMPLETED"
+
+            };
+
+
+            updateLocalRecord(
+                record
+            );
+
+
+            showStudentInfo(
+                studentId,
+                "Time Out recorded at " +
+                (
+                    result.timeOut ||
+                    currentTime
+                ) +
+                " — COMPLETED"
+            );
+
+
+            saveRecords();
+
+            displayAttendance();
+
+            return;
+
+        }
+
+
+        /*
+         * Fallback for a normal Time Out
+         * response.
          */
 
         if (!record) {
@@ -1582,26 +1720,26 @@ async function processStudent(
             record = {
 
                 studentId:
-                    studentId,
+                studentId,
 
                 date:
-                    today,
+                today,
 
                 timeIn:
-                    result.timeIn ||
-                    "",
+                result.timeIn ||
+                "",
 
                 timeOut:
-                    result.timeOut ||
-                    currentTime,
+                result.timeOut ||
+                currentTime,
 
                 remark:
-                    result.remark ||
-                    "",
+                result.remark ||
+                "",
 
                 status:
-                    result.status ||
-                    "COMPLETED"
+                result.status ||
+                "COMPLETED"
 
             };
 
@@ -1614,119 +1752,24 @@ async function processStudent(
 
         else {
 
-            /*
-             * Update Time Out.
-             */
-
             record.timeOut =
                 result.timeOut ||
                 currentTime;
 
 
-            /*
-             * Update Time In if
-             * server has one.
-             */
+            record.timeIn =
+                result.timeIn ||
+                record.timeIn;
 
-            if (
-                result.timeIn
-            ) {
-
-                record.timeIn =
-                    result.timeIn;
-
-            }
-
-
-            /*
-             * New NO TIME IN behavior.
-             */
-
-            if (
-                result.remark ===
-                "NO TIME IN"
-            ) {
-
-                record.remark =
-                    "NO TIME IN";
-
-            }
-
-
-            /*
-             * Completed whenever
-             * Time Out is successfully recorded.
-             */
-
-            if (
-                record.timeOut
-            ) {
-
-                record.status =
-                    "COMPLETED";
-
-            }
-
-        }
-
-
-        /*
-         * Make sure NO TIME IN is retained.
-         */
-
-        if (
-            result.remark ===
-            "NO TIME IN"
-        ) {
 
             record.remark =
-                "NO TIME IN";
+                result.remark ||
+                "";
 
-        }
-
-
-        /*
-         * Make sure status is completed.
-         */
-
-        if (
-            result.status ===
-            "COMPLETED"
-        ) {
 
             record.status =
+                result.status ||
                 "COMPLETED";
-
-        }
-
-
-        if (
-            result.remark ===
-            "NO TIME IN"
-        ) {
-
-            showStudentInfo(
-                studentId,
-                "Time Out recorded at " +
-                (
-                    result.timeOut ||
-                    currentTime
-                ) +
-                " — NO TIME IN"
-            );
-
-        }
-
-        else {
-
-            showStudentInfo(
-                studentId,
-                "Time Out recorded at " +
-                (
-                    result.timeOut ||
-                    currentTime
-                )
-            );
 
         }
 
@@ -1738,7 +1781,6 @@ async function processStudent(
     displayAttendance();
 
 }
-
 
 
 /* =====================================================
@@ -1760,12 +1802,11 @@ function updateLocalRecord(
 
 
     if (
-        index >=
-        0
+        index >= 0
     ) {
 
         attendanceRecords[index] =
-            newRecord;
+        newRecord;
 
     }
 
@@ -1778,7 +1819,6 @@ function updateLocalRecord(
     }
 
 }
-
 
 
 /* =====================================================
@@ -1813,11 +1853,6 @@ function processManualID() {
     }
 
 
-    /*
-     * Manual entry also produces
-     * the scanner beep.
-     */
-
     playScannerBeep();
 
 
@@ -1827,10 +1862,9 @@ function processManualID() {
 
 
     input.value =
-        "";
+    "";
 
 }
-
 
 
 /* =====================================================
@@ -1858,7 +1892,6 @@ document
     );
 
 
-
 /* =====================================================
    QR SCAN SUCCESS
 ===================================================== */
@@ -1873,8 +1906,8 @@ function onScanSuccess(
 
 
     /*
-     * Prevent the same QR from being
-     * recorded repeatedly for 3 seconds.
+     * Prevent repeated scans of
+     * the same QR within 3 seconds.
      */
 
     if (
@@ -1891,7 +1924,7 @@ function onScanSuccess(
 
 
     /*
-     * Prevent simultaneous processing.
+     * Prevent simultaneous requests.
      */
 
     if (
@@ -1904,17 +1937,12 @@ function onScanSuccess(
 
 
     lastScannedCode =
-        decodedText;
+    decodedText;
 
 
     lastScanTime =
-        now;
+    now;
 
-
-    /*
-     * BEEP IMMEDIATELY
-     * WHEN QR IS DETECTED.
-     */
 
     playScannerBeep();
 
@@ -1922,19 +1950,14 @@ function onScanSuccess(
     document.getElementById(
         "scannerStatus"
     ).textContent =
-        "QR code detected!";
+    "QR code detected!";
 
-
-    /*
-     * Process attendance.
-     */
 
     processStudent(
         decodedText
     );
 
 }
-
 
 
 /* =====================================================
@@ -1946,12 +1969,11 @@ function onScanFailure(
 ) {
 
     /*
-     * Normal QR scanning failures
+     * Normal scanning failures
      * are ignored.
      */
 
 }
-
 
 
 /* =====================================================
@@ -1966,27 +1988,27 @@ const html5QrCodeScanner =
         {
 
             fps:
-                10,
+            10,
 
             qrbox:
-                {
-                    width:
-                        250,
+            {
+                width:
+                250,
 
-                    height:
-                        250
-                },
+                height:
+                250
+            },
 
             rememberLastUsedCamera:
-                true,
+            true,
 
             supportedScanTypes:
-                [
+            [
 
-                    Html5QrcodeScanType
-                        .SCAN_TYPE_CAMERA
+                Html5QrcodeScanType
+                    .SCAN_TYPE_CAMERA
 
-                ]
+            ]
 
         },
 
@@ -1999,7 +2021,6 @@ html5QrCodeScanner.render(
     onScanSuccess,
     onScanFailure
 );
-
 
 
 /* =====================================================
@@ -2016,7 +2037,6 @@ function saveRecords() {
     );
 
 }
-
 
 
 /* =====================================================
@@ -2061,7 +2081,7 @@ function displayAttendance() {
 
 
     table.innerHTML =
-        "";
+    "";
 
 
     if (
@@ -2088,7 +2108,6 @@ function displayAttendance() {
     }
 
 
-
     filteredRecords.forEach(
         (
             record,
@@ -2101,39 +2120,46 @@ function displayAttendance() {
                 );
 
 
-            const completed =
-                record.status ===
-                "COMPLETED";
-
+            /*
+             * Status comes directly from
+             * the attendance record.
+             */
 
             let statusClass =
                 "present";
 
 
             if (
-                record.remark ===
-                "NO TIME IN"
+                record.status ===
+                "INCOMPLETE"
             ) {
 
                 statusClass =
-                    "no-time-in";
+                "no-time-in";
 
             }
 
             else if (
-                completed
+                record.status ===
+                "COMPLETED"
             ) {
 
                 statusClass =
-                    "completed";
+                "completed";
+
+            }
+
+            else {
+
+                statusClass =
+                "present";
 
             }
 
 
             const statusText =
-                completed
-                ? "COMPLETED"
-                : "PRESENT";
+                record.status ||
+                "PRESENT";
 
 
             const remarkText =
@@ -2185,8 +2211,8 @@ function displayAttendance() {
 
                     <span
                         class="status-badge ${
-                            record.remark ===
-                            "NO TIME IN"
+                            record.status ===
+                            "INCOMPLETE"
                             ? "no-time-in"
                             : ""
                         }">
@@ -2206,7 +2232,9 @@ function displayAttendance() {
                     <span
                         class="status-badge ${statusClass}">
 
-                        ${statusText}
+                        ${escapeHTML(
+                            statusText
+                        )}
 
                     </span>
 
@@ -2226,7 +2254,6 @@ function displayAttendance() {
     updateStatistics();
 
 }
-
 
 
 /* =====================================================
@@ -2264,22 +2291,21 @@ function updateStatistics() {
     document.getElementById(
         "totalStudents"
     ).textContent =
-        todayRecords.length;
+    todayRecords.length;
 
 
     document.getElementById(
         "timeInCount"
     ).textContent =
-        timeIn;
+    timeIn;
 
 
     document.getElementById(
         "timeOutCount"
     ).textContent =
-        timeOut;
+    timeOut;
 
 }
-
 
 
 /* =====================================================
@@ -2298,26 +2324,25 @@ function showMessage(
 
 
     message.textContent =
-        text;
+    text;
 
 
     message.className =
-        "message " +
-        type;
+    "message " +
+    type;
 
 
     setTimeout(
         function() {
 
             message.className =
-                "message";
+            "message";
 
         },
         5000
     );
 
 }
-
 
 
 /* =====================================================
@@ -2359,21 +2384,20 @@ function showStudentInfo(
 
 
     info.style.display =
-        "block";
+    "block";
 
 
     setTimeout(
         function() {
 
             info.style.display =
-                "none";
+            "none";
 
         },
         5000
     );
 
 }
-
 
 
 /* =====================================================
@@ -2391,13 +2415,12 @@ function escapeHTML(
 
 
     div.textContent =
-        value;
+    value;
 
 
     return div.innerHTML;
 
 }
-
 
 
 /* =====================================================
@@ -2438,7 +2461,7 @@ function exportCSV() {
 
 
     let csv =
-        "Student ID,Date,Time In,Time Out,Late/No Time In,Attendance Status\n";
+    "Student ID,Date,Time In,Time Out,Late/No Time In,Attendance Status\n";
 
 
     records.forEach(
@@ -2461,7 +2484,7 @@ function exportCSV() {
             [csv],
             {
                 type:
-                    "text/csv;charset=utf-8;"
+                "text/csv;charset=utf-8;"
             }
         );
 
@@ -2479,13 +2502,13 @@ function exportCSV() {
 
 
     link.href =
-        url;
+    url;
 
 
     link.download =
-        "attendance-" +
-        today +
-        ".csv";
+    "attendance-" +
+    today +
+    ".csv";
 
 
     document.body.appendChild(
@@ -2512,7 +2535,6 @@ function exportCSV() {
     );
 
 }
-
 
 
 /* =====================================================
@@ -2562,7 +2584,6 @@ function clearAttendance() {
     );
 
 }
-
 
 
 /* =====================================================
