@@ -12,6 +12,11 @@
 
 <title>Student Attendance Scanner</title>
 
+<!-- PWA MANIFEST -->
+<link rel="manifest" href="./manifest.json">
+
+<meta name="theme-color" content="#2563eb">
+
 <script
     src="https://unpkg.com/html5-qrcode"
     type="text/javascript">
@@ -325,9 +330,7 @@ footer {
 
 </head>
 
-
 <body>
-
 
 <header>
 
@@ -341,13 +344,7 @@ Automated QR Code Attendance Scanner
 
 </header>
 
-
 <div class="container">
-
-
-<!-- =====================================================
-     DASHBOARD
-===================================================== -->
 
 <div class="dashboard">
 
@@ -363,7 +360,6 @@ Students Scanned Today
 
 </div>
 
-
 <div class="stat-card">
 
 <h2 id="timeInCount">
@@ -375,7 +371,6 @@ Time In
 </p>
 
 </div>
-
 
 <div class="stat-card">
 
@@ -391,17 +386,7 @@ Time Out
 
 </div>
 
-
-<!-- =====================================================
-     MAIN GRID
-===================================================== -->
-
 <div class="main-grid">
-
-
-<!-- =====================================================
-     SCANNER
-===================================================== -->
 
 <div class="card">
 
@@ -409,9 +394,7 @@ Time Out
 📷 Scan Student QR Code
 </h2>
 
-
 <div id="reader"></div>
-
 
 <div
     class="scanner-status"
@@ -421,22 +404,17 @@ Camera scanner is ready.
 
 </div>
 
-
 <div class="connection-status">
 
 ● Attendance database connected
 
 </div>
 
-
-<!-- MANUAL ID -->
-
 <div class="manual-section">
 
 <h3>
 Or Enter Student ID Manually
 </h3>
-
 
 <div class="input-group">
 
@@ -445,7 +423,6 @@ Or Enter Student ID Manually
     id="studentIdInput"
     placeholder="Enter Student ID"
 >
-
 
 <button
     class="primary-btn"
@@ -459,16 +436,10 @@ Submit
 
 </div>
 
-
-<!-- MESSAGE -->
-
 <div
     id="message"
     class="message">
 </div>
-
-
-<!-- STUDENT INFO -->
 
 <div
     id="studentInfo"
@@ -477,17 +448,11 @@ Submit
 
 </div>
 
-
-<!-- =====================================================
-     CONTROLS
-===================================================== -->
-
 <div class="card">
 
 <h2>
 ⚙️ Attendance Controls
 </h2>
-
 
 <div class="date-display">
 
@@ -500,9 +465,6 @@ Today:
 
 </div>
 
-
-<!-- MODE BUTTONS -->
-
 <div class="action-buttons">
 
 <button
@@ -512,7 +474,6 @@ Today:
 🟢 Time In Mode
 
 </button>
-
 
 <button
     class="primary-btn"
@@ -524,9 +485,6 @@ Today:
 
 </div>
 
-
-<!-- CURRENT MODE -->
-
 <div
     id="modeDisplay"
     class="message info"
@@ -535,9 +493,6 @@ Today:
 Current Mode: TIME IN
 
 </div>
-
-
-<!-- CONTROL BUTTONS -->
 
 <div class="action-buttons">
 
@@ -550,7 +505,6 @@ Current Mode: TIME IN
 
 </button>
 
-
 <button
     class="primary-btn"
     onclick="exportCSV()">
@@ -558,7 +512,6 @@ Current Mode: TIME IN
 📥 Export Local CSV
 
 </button>
-
 
 <button
     class="danger-btn"
@@ -569,7 +522,6 @@ Current Mode: TIME IN
 </button>
 
 </div>
-
 
 <div
     id="soundStatus"
@@ -584,17 +536,11 @@ Sound is disabled. Click Enable Sound before scanning.
 
 </div>
 
-
-<!-- =====================================================
-     ATTENDANCE TABLE
-===================================================== -->
-
 <div class="card">
 
 <h2>
 📊 Today's Attendance
 </h2>
-
 
 <div style="margin-bottom:15px;">
 
@@ -607,7 +553,6 @@ Sound is disabled. Click Enable Sound before scanning.
 
 </div>
 
-
 <div class="table-container">
 
 <table>
@@ -616,38 +561,23 @@ Sound is disabled. Click Enable Sound before scanning.
 
 <tr>
 
-<th>
-#
-</th>
+<th>#</th>
 
-<th>
-Student ID
-</th>
+<th>Student ID</th>
 
-<th>
-Date
-</th>
+<th>Date</th>
 
-<th>
-Time In
-</th>
+<th>Time In</th>
 
-<th>
-Time Out
-</th>
+<th>Time Out</th>
 
-<th>
-Late/No Time In
-</th>
+<th>Late/No Time In</th>
 
-<th>
-Status
-</th>
+<th>Status</th>
 
 </tr>
 
 </thead>
-
 
 <tbody id="attendanceTable">
 </tbody>
@@ -660,16 +590,13 @@ Status
 
 </div>
 
-
 <footer>
 
 Automated Student Attendance System
 
 </footer>
 
-
 <script>
-
 
 /* =====================================================
    GOOGLE APPS SCRIPT URL
@@ -683,40 +610,27 @@ const SCRIPT_URL =
    SYSTEM VARIABLES
 ===================================================== */
 
-let attendanceMode =
-"TIME IN";
-
+let attendanceMode = "TIME IN";
 
 let attendanceRecords =
 JSON.parse(
-    localStorage.getItem(
-        "attendanceRecords"
-    )
+    localStorage.getItem("attendanceRecords")
 ) || [];
 
+let lastScannedCode = "";
 
-let lastScannedCode =
-"";
+let lastScanTime = 0;
 
-
-let lastScanTime =
-0;
-
-
-let isProcessing =
-false;
+let isProcessing = false;
 
 
 /* =====================================================
    AUDIO
 ===================================================== */
 
-let audioContext =
-null;
+let audioContext = null;
 
-
-let soundEnabled =
-false;
+let soundEnabled = false;
 
 
 /* =====================================================
@@ -731,7 +645,6 @@ function enableSound() {
             window.AudioContext ||
             window.webkitAudioContext;
 
-
         if (!AudioContext) {
 
             document.getElementById(
@@ -743,14 +656,12 @@ function enableSound() {
 
         }
 
-
         if (!audioContext) {
 
             audioContext =
                 new AudioContext();
 
         }
-
 
         if (
             audioContext.state ===
@@ -761,31 +672,24 @@ function enableSound() {
 
         }
 
-
-        soundEnabled =
-        true;
-
+        soundEnabled = true;
 
         const button =
             document.getElementById(
                 "soundButton"
             );
 
-
         button.textContent =
             "🔊 SOUND ENABLED";
-
 
         button.classList.add(
             "sound-enabled"
         );
 
-
         document.getElementById(
             "soundStatus"
         ).textContent =
         "Sound enabled. Scanner beep is ready.";
-
 
         playScannerBeep();
 
@@ -813,13 +717,11 @@ function playScannerBeep() {
         return;
     }
 
-
     try {
 
         if (!audioContext) {
             return;
         }
-
 
         if (
             audioContext.state ===
@@ -830,67 +732,49 @@ function playScannerBeep() {
 
         }
 
-
         const now =
             audioContext.currentTime;
-
 
         const oscillator =
             audioContext.createOscillator();
 
-
         const gainNode =
             audioContext.createGain();
 
-
-        oscillator.connect(
-            gainNode
-        );
-
+        oscillator.connect(gainNode);
 
         gainNode.connect(
             audioContext.destination
         );
 
-
-        oscillator.type =
-            "sine";
-
+        oscillator.type = "sine";
 
         oscillator.frequency.setValueAtTime(
             2200,
             now
         );
 
-
         gainNode.gain.setValueAtTime(
             0.0001,
             now
         );
-
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.35,
             now + 0.01
         );
 
-
         gainNode.gain.setValueAtTime(
             0.35,
             now + 0.25
         );
-
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
             now + 0.30
         );
 
-
-        oscillator.start(
-            now
-        );
-
+        oscillator.start(now);
 
         oscillator.stop(
             now + 0.30
@@ -920,68 +804,50 @@ function playErrorSound() {
         return;
     }
 
-
     try {
 
         if (!audioContext) {
             return;
         }
 
-
         const now =
             audioContext.currentTime;
-
 
         const oscillator =
             audioContext.createOscillator();
 
-
         const gainNode =
             audioContext.createGain();
 
-
-        oscillator.connect(
-            gainNode
-        );
-
+        oscillator.connect(gainNode);
 
         gainNode.connect(
             audioContext.destination
         );
 
-
-        oscillator.type =
-            "square";
-
+        oscillator.type = "square";
 
         oscillator.frequency.setValueAtTime(
             350,
             now
         );
 
-
         gainNode.gain.setValueAtTime(
             0.0001,
             now
         );
-
 
         gainNode.gain.exponentialRampToValueAtTime(
             0.35,
             now + 0.01
         );
 
-
         gainNode.gain.exponentialRampToValueAtTime(
             0.0001,
             now + 0.25
         );
 
-
-        oscillator.start(
-            now
-        );
-
+        oscillator.start(now);
 
         oscillator.stop(
             now + 0.25
@@ -1007,31 +873,20 @@ function playErrorSound() {
 
 function getToday() {
 
-    const now =
-        new Date();
-
+    const now = new Date();
 
     const year =
         now.getFullYear();
 
-
     const month =
         String(
             now.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
+        ).padStart(2, "0");
 
     const day =
         String(
             now.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
+        ).padStart(2, "0");
 
     return (
         year +
@@ -1050,9 +905,7 @@ function getToday() {
 
 function getCurrentTime() {
 
-    const now =
-        new Date();
-
+    const now = new Date();
 
     return now.toLocaleTimeString(
         [],
@@ -1072,9 +925,7 @@ function getCurrentTime() {
 
 function getDisplayDate() {
 
-    const now =
-        new Date();
-
+    const now = new Date();
 
     return now.toLocaleDateString(
         [],
@@ -1098,24 +949,17 @@ getDisplayDate();
    SET MODE
 ===================================================== */
 
-function setAttendanceMode(
-    mode
-) {
+function setAttendanceMode(mode) {
 
-    attendanceMode =
-        mode;
-
+    attendanceMode = mode;
 
     document.getElementById(
         "modeDisplay"
     ).textContent =
-    "Current Mode: " +
-    mode;
-
+    "Current Mode: " + mode;
 
     showMessage(
-        "Attendance mode changed to " +
-        mode,
+        "Attendance mode changed to " + mode,
         "info"
     );
 
@@ -1126,28 +970,18 @@ function setAttendanceMode(
    SEND ATTENDANCE TO GOOGLE SHEETS
 ===================================================== */
 
-async function sendAttendanceToSheet(
-    studentId
-) {
+async function sendAttendanceToSheet(studentId) {
 
     if (isProcessing) {
 
         return {
-
-            success:
-            false,
-
-            message:
-            "Please wait."
-
+            success: false,
+            message: "Please wait."
         };
 
     }
 
-
-    isProcessing =
-    true;
-
+    isProcessing = true;
 
     try {
 
@@ -1156,54 +990,37 @@ async function sendAttendanceToSheet(
             "info"
         );
 
-
         const response =
             await fetch(
                 SCRIPT_URL,
                 {
-
-                    method:
-                    "POST",
+                    method: "POST",
 
                     headers: {
-
                         "Content-Type":
                         "text/plain;charset=utf-8"
-
                     },
 
                     body:
                     JSON.stringify({
-
                         studentId:
                         studentId,
 
                         action:
                         attendanceMode
-
                     })
-
                 }
             );
 
-
         const result =
             await response.json();
-
 
         console.log(
             "Server response:",
             result
         );
 
-
-        /*
-         * Successful request.
-         */
-
-        if (
-            result.success
-        ) {
+        if (result.success) {
 
             showMessage(
                 result.message,
@@ -1211,11 +1028,6 @@ async function sendAttendanceToSheet(
             );
 
         }
-
-        /*
-         * Duplicate or already-completed
-         * attendance.
-         */
 
         else {
 
@@ -1256,7 +1068,6 @@ async function sendAttendanceToSheet(
 
         }
 
-
         return result;
 
     }
@@ -1268,32 +1079,24 @@ async function sendAttendanceToSheet(
             error
         );
 
-
         playErrorSound();
-
 
         showMessage(
             "Unable to connect to the attendance database.",
             "error"
         );
 
-
         return {
-
-            success:
-            false,
-
+            success: false,
             message:
             "Unable to connect to the attendance database."
-
         };
 
     }
 
     finally {
 
-        isProcessing =
-        false;
+        isProcessing = false;
 
     }
 
@@ -1304,47 +1107,28 @@ async function sendAttendanceToSheet(
    PROCESS STUDENT
 ===================================================== */
 
-async function processStudent(
-    studentId
-) {
+async function processStudent(studentId) {
 
     if (!studentId) {
 
         playErrorSound();
-
 
         showMessage(
             "Please enter a valid Student ID.",
             "error"
         );
 
-
         return;
 
     }
 
-
     studentId =
         studentId.trim();
-
-
-    /*
-     * Send to Google Apps Script first.
-     */
 
     const result =
         await sendAttendanceToSheet(
             studentId
         );
-
-
-    /*
-     * If server rejected the request,
-     * do not create a new local record.
-     *
-     * INCOMPLETE and COMPLETED are still
-     * valid server states and are handled below.
-     */
 
     if (
         !result.success &&
@@ -1356,26 +1140,17 @@ async function processStudent(
 
     }
 
-
     const today =
         getToday();
-
 
     const currentTime =
         getCurrentTime();
 
-
-    /*
-     * Find today's local record.
-     */
-
     let record =
         attendanceRecords.find(
             r =>
-                r.studentId ===
-                studentId &&
-                r.date ===
-                today
+                r.studentId === studentId &&
+                r.date === today
         );
 
 
@@ -1387,12 +1162,6 @@ async function processStudent(
         attendanceMode ===
         "TIME IN"
     ) {
-
-
-        /*
-         * Server says attendance is
-         * already COMPLETED.
-         */
 
         if (
             result.status ===
@@ -1408,33 +1177,25 @@ async function processStudent(
                 today,
 
                 timeIn:
-                result.timeIn ||
-                "",
+                result.timeIn || "",
 
                 timeOut:
-                result.timeOut ||
-                "",
+                result.timeOut || "",
 
                 remark:
-                result.remark ||
-                "",
+                result.remark || "",
 
                 status:
                 "COMPLETED"
 
             };
 
-
-            updateLocalRecord(
-                record
-            );
-
+            updateLocalRecord(record);
 
             showStudentInfo(
                 studentId,
                 "Attendance already completed."
             );
-
 
             saveRecords();
 
@@ -1444,13 +1205,6 @@ async function processStudent(
 
         }
 
-
-        /*
-         * Server says INCOMPLETE.
-         *
-         * This means there is already a Time Out
-         * without a Time In.
-         */
 
         if (
             result.status ===
@@ -1465,12 +1219,10 @@ async function processStudent(
                 date:
                 today,
 
-                timeIn:
-                "",
+                timeIn: "",
 
                 timeOut:
-                result.timeOut ||
-                "",
+                result.timeOut || "",
 
                 remark:
                 "NO TIME IN",
@@ -1480,17 +1232,12 @@ async function processStudent(
 
             };
 
-
-            updateLocalRecord(
-                record
-            );
-
+            updateLocalRecord(record);
 
             showStudentInfo(
                 studentId,
                 "Attendance is INCOMPLETE — NO TIME IN."
             );
-
 
             saveRecords();
 
@@ -1500,10 +1247,6 @@ async function processStudent(
 
         }
 
-
-        /*
-         * Normal Time In.
-         */
 
         if (!record) {
 
@@ -1519,17 +1262,14 @@ async function processStudent(
                 result.timeIn ||
                 currentTime,
 
-                timeOut:
-                "",
+                timeOut: "",
 
-                remark:
-                "",
+                remark: "",
 
                 status:
                 "PRESENT"
 
             };
-
 
             attendanceRecords.push(
                 record
@@ -1544,16 +1284,12 @@ async function processStudent(
                 record.timeIn ||
                 currentTime;
 
-
-            record.remark =
-                "";
-
+            record.remark = "";
 
             record.status =
                 "PRESENT";
 
         }
-
 
         showStudentInfo(
             studentId,
@@ -1577,20 +1313,6 @@ async function processStudent(
         "TIME OUT"
     ) {
 
-
-        /*
-         * NO TIME IN
-         *
-         * This is the important rule:
-         *
-         * Time Out exists
-         * Time In does not exist
-         *
-         * Therefore:
-         *
-         * STATUS = INCOMPLETE
-         */
-
         if (
             result.status ===
             "INCOMPLETE" ||
@@ -1606,8 +1328,7 @@ async function processStudent(
                 date:
                 today,
 
-                timeIn:
-                "",
+                timeIn: "",
 
                 timeOut:
                 result.timeOut ||
@@ -1621,11 +1342,7 @@ async function processStudent(
 
             };
 
-
-            updateLocalRecord(
-                record
-            );
-
+            updateLocalRecord(record);
 
             showStudentInfo(
                 studentId,
@@ -1637,7 +1354,6 @@ async function processStudent(
                 " — NO TIME IN — INCOMPLETE"
             );
 
-
             saveRecords();
 
             displayAttendance();
@@ -1646,10 +1362,6 @@ async function processStudent(
 
         }
 
-
-        /*
-         * NORMAL COMPLETED ATTENDANCE
-         */
 
         if (
             result.status ===
@@ -1676,19 +1388,14 @@ async function processStudent(
                 result.timeOut ||
                 currentTime,
 
-                remark:
-                "",
+                remark: "",
 
                 status:
                 "COMPLETED"
 
             };
 
-
-            updateLocalRecord(
-                record
-            );
-
+            updateLocalRecord(record);
 
             showStudentInfo(
                 studentId,
@@ -1700,7 +1407,6 @@ async function processStudent(
                 " — COMPLETED"
             );
 
-
             saveRecords();
 
             displayAttendance();
@@ -1709,11 +1415,6 @@ async function processStudent(
 
         }
 
-
-        /*
-         * Fallback for a normal Time Out
-         * response.
-         */
 
         if (!record) {
 
@@ -1726,23 +1427,20 @@ async function processStudent(
                 today,
 
                 timeIn:
-                result.timeIn ||
-                "",
+                result.timeIn || "",
 
                 timeOut:
                 result.timeOut ||
                 currentTime,
 
                 remark:
-                result.remark ||
-                "",
+                result.remark || "",
 
                 status:
                 result.status ||
                 "COMPLETED"
 
             };
-
 
             attendanceRecords.push(
                 record
@@ -1756,16 +1454,12 @@ async function processStudent(
                 result.timeOut ||
                 currentTime;
 
-
             record.timeIn =
                 result.timeIn ||
                 record.timeIn;
 
-
             record.remark =
-                result.remark ||
-                "";
-
+                result.remark || "";
 
             record.status =
                 result.status ||
@@ -1774,7 +1468,6 @@ async function processStudent(
         }
 
     }
-
 
     saveRecords();
 
@@ -1787,9 +1480,7 @@ async function processStudent(
    UPDATE LOCAL RECORD
 ===================================================== */
 
-function updateLocalRecord(
-    newRecord
-) {
+function updateLocalRecord(newRecord) {
 
     const index =
         attendanceRecords.findIndex(
@@ -1800,13 +1491,10 @@ function updateLocalRecord(
                 newRecord.date
         );
 
-
-    if (
-        index >= 0
-    ) {
+    if (index >= 0) {
 
         attendanceRecords[index] =
-        newRecord;
+            newRecord;
 
     }
 
@@ -1832,37 +1520,29 @@ function processManualID() {
             "studentIdInput"
         );
 
-
     const studentId =
         input.value.trim();
-
 
     if (!studentId) {
 
         playErrorSound();
-
 
         showMessage(
             "Please enter a Student ID.",
             "error"
         );
 
-
         return;
 
     }
 
-
     playScannerBeep();
-
 
     processStudent(
         studentId
     );
 
-
-    input.value =
-    "";
+    input.value = "";
 
 }
 
@@ -1904,12 +1584,6 @@ function onScanSuccess(
     const now =
         Date.now();
 
-
-    /*
-     * Prevent repeated scans of
-     * the same QR within 3 seconds.
-     */
-
     if (
         decodedText ===
         lastScannedCode &&
@@ -1922,36 +1596,24 @@ function onScanSuccess(
 
     }
 
-
-    /*
-     * Prevent simultaneous requests.
-     */
-
-    if (
-        isProcessing
-    ) {
+    if (isProcessing) {
 
         return;
 
     }
 
-
     lastScannedCode =
-    decodedText;
-
+        decodedText;
 
     lastScanTime =
-    now;
-
+        now;
 
     playScannerBeep();
-
 
     document.getElementById(
         "scannerStatus"
     ).textContent =
     "QR code detected!";
-
 
     processStudent(
         decodedText
@@ -1964,14 +1626,9 @@ function onScanSuccess(
    QR SCAN FAILURE
 ===================================================== */
 
-function onScanFailure(
-    error
-) {
+function onScanFailure(error) {
 
-    /*
-     * Normal scanning failures
-     * are ignored.
-     */
+    /* Normal scanning failures are ignored. */
 
 }
 
@@ -1987,16 +1644,11 @@ const html5QrCodeScanner =
 
         {
 
-            fps:
-            10,
+            fps: 10,
 
-            qrbox:
-            {
-                width:
-                250,
-
-                height:
-                250
+            qrbox: {
+                width: 250,
+                height: 250
             },
 
             rememberLastUsedCamera:
@@ -2004,10 +1656,8 @@ const html5QrCodeScanner =
 
             supportedScanTypes:
             [
-
                 Html5QrcodeScanType
                     .SCAN_TYPE_CAMERA
-
             ]
 
         },
@@ -2015,7 +1665,6 @@ const html5QrCodeScanner =
         false
 
     );
-
 
 html5QrCodeScanner.render(
     onScanSuccess,
@@ -2050,7 +1699,6 @@ function displayAttendance() {
             "attendanceTable"
         );
 
-
     const search =
         document.getElementById(
             "searchInput"
@@ -2058,18 +1706,14 @@ function displayAttendance() {
         .value
         .toLowerCase();
 
-
     const today =
         getToday();
-
 
     const todayRecords =
         attendanceRecords.filter(
             record =>
-                record.date ===
-                today
+                record.date === today
         );
-
 
     const filteredRecords =
         todayRecords.filter(
@@ -2079,10 +1723,7 @@ function displayAttendance() {
                     .includes(search)
         );
 
-
-    table.innerHTML =
-    "";
-
+    table.innerHTML = "";
 
     if (
         filteredRecords.length ===
@@ -2107,7 +1748,6 @@ function displayAttendance() {
 
     }
 
-
     filteredRecords.forEach(
         (
             record,
@@ -2119,15 +1759,8 @@ function displayAttendance() {
                     "tr"
                 );
 
-
-            /*
-             * Status comes directly from
-             * the attendance record.
-             */
-
             let statusClass =
                 "present";
-
 
             if (
                 record.status ===
@@ -2135,7 +1768,7 @@ function displayAttendance() {
             ) {
 
                 statusClass =
-                "no-time-in";
+                    "no-time-in";
 
             }
 
@@ -2145,27 +1778,17 @@ function displayAttendance() {
             ) {
 
                 statusClass =
-                "completed";
+                    "completed";
 
             }
-
-            else {
-
-                statusClass =
-                "present";
-
-            }
-
 
             const statusText =
                 record.status ||
                 "PRESENT";
 
-
             const remarkText =
                 record.remark ||
                 "—";
-
 
             row.innerHTML = `
 
@@ -2190,21 +1813,17 @@ function displayAttendance() {
                 </td>
 
                 <td>
-                    ${
-                        escapeHTML(
-                            record.timeIn ||
-                            "—"
-                        )
-                    }
+                    ${escapeHTML(
+                        record.timeIn ||
+                        "—"
+                    )}
                 </td>
 
                 <td>
-                    ${
-                        escapeHTML(
-                            record.timeOut ||
-                            "—"
-                        )
-                    }
+                    ${escapeHTML(
+                        record.timeOut ||
+                        "—"
+                    )}
                 </td>
 
                 <td>
@@ -2217,11 +1836,9 @@ function displayAttendance() {
                             : ""
                         }">
 
-                        ${
-                            escapeHTML(
-                                remarkText
-                            )
-                        }
+                        ${escapeHTML(
+                            remarkText
+                        )}
 
                     </span>
 
@@ -2242,14 +1859,12 @@ function displayAttendance() {
 
             `;
 
-
             table.appendChild(
                 row
             );
 
         }
     );
-
 
     updateStatistics();
 
@@ -2265,14 +1880,11 @@ function updateStatistics() {
     const today =
         getToday();
 
-
     const todayRecords =
         attendanceRecords.filter(
             record =>
-                record.date ===
-                today
+                record.date === today
         );
-
 
     const timeIn =
         todayRecords.filter(
@@ -2280,25 +1892,21 @@ function updateStatistics() {
                 record.timeIn
         ).length;
 
-
     const timeOut =
         todayRecords.filter(
             record =>
                 record.timeOut
         ).length;
 
-
     document.getElementById(
         "totalStudents"
     ).textContent =
     todayRecords.length;
 
-
     document.getElementById(
         "timeInCount"
     ).textContent =
     timeIn;
-
 
     document.getElementById(
         "timeOutCount"
@@ -2322,21 +1930,18 @@ function showMessage(
             "message"
         );
 
-
     message.textContent =
-    text;
-
+        text;
 
     message.className =
-    "message " +
-    type;
-
+        "message " +
+        type;
 
     setTimeout(
         function() {
 
             message.className =
-            "message";
+                "message";
 
         },
         5000
@@ -2358,7 +1963,6 @@ function showStudentInfo(
         document.getElementById(
             "studentInfo"
         );
-
 
     info.innerHTML = `
 
@@ -2382,16 +1986,14 @@ function showStudentInfo(
 
     `;
 
-
     info.style.display =
-    "block";
-
+        "block";
 
     setTimeout(
         function() {
 
             info.style.display =
-            "none";
+                "none";
 
         },
         5000
@@ -2404,19 +2006,15 @@ function showStudentInfo(
    HTML SECURITY
 ===================================================== */
 
-function escapeHTML(
-    value
-) {
+function escapeHTML(value) {
 
     const div =
         document.createElement(
             "div"
         );
 
-
     div.textContent =
-    value;
-
+        value;
 
     return div.innerHTML;
 
@@ -2432,14 +2030,11 @@ function exportCSV() {
     const today =
         getToday();
 
-
     const records =
         attendanceRecords.filter(
             record =>
-                record.date ===
-                today
+                record.date === today
         );
-
 
     if (
         records.length ===
@@ -2448,21 +2043,17 @@ function exportCSV() {
 
         playErrorSound();
 
-
         showMessage(
             "There are no local attendance records to export.",
             "error"
         );
 
-
         return;
 
     }
 
-
     let csv =
     "Student ID,Date,Time In,Time Out,Late/No Time In,Attendance Status\n";
-
 
     records.forEach(
         record => {
@@ -2478,7 +2069,6 @@ function exportCSV() {
         }
     );
 
-
     const blob =
         new Blob(
             [csv],
@@ -2488,46 +2078,37 @@ function exportCSV() {
             }
         );
 
-
     const url =
         URL.createObjectURL(
             blob
         );
-
 
     const link =
         document.createElement(
             "a"
         );
 
-
     link.href =
-    url;
-
+        url;
 
     link.download =
-    "attendance-" +
-    today +
-    ".csv";
-
+        "attendance-" +
+        today +
+        ".csv";
 
     document.body.appendChild(
         link
     );
 
-
     link.click();
-
 
     document.body.removeChild(
         link
     );
 
-
     URL.revokeObjectURL(
         url
     );
-
 
     showMessage(
         "Attendance CSV exported successfully.",
@@ -2552,35 +2133,67 @@ function clearAttendance() {
 
         );
 
-
     if (!confirmation) {
 
         return;
 
     }
 
-
     const today =
         getToday();
-
 
     attendanceRecords =
         attendanceRecords.filter(
             record =>
-                record.date !==
-                today
+                record.date !== today
         );
-
 
     saveRecords();
 
-
     displayAttendance();
-
 
     showMessage(
         "Today's local records have been cleared.",
         "success"
+    );
+
+}
+
+
+/* =====================================================
+   PWA SERVICE WORKER REGISTRATION
+===================================================== */
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener(
+        "load",
+        function() {
+
+            navigator.serviceWorker
+                .register("./service-worker.js")
+                .then(
+                    function(registration) {
+
+                        console.log(
+                            "Service Worker registered:",
+                            registration.scope
+                        );
+
+                    }
+                )
+                .catch(
+                    function(error) {
+
+                        console.log(
+                            "Service Worker registration failed:",
+                            error
+                        );
+
+                    }
+                );
+
+        }
     );
 
 }
@@ -2593,7 +2206,6 @@ function clearAttendance() {
 displayAttendance();
 
 </script>
-
 
 </body>
 
