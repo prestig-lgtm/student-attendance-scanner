@@ -1,129 +1,150 @@
-const CACHE_NAME = "attendance-system-v1";
+const CACHE_NAME = "student-attendance-v1";
 
 const FILES_TO_CACHE = [
     "./",
     "./index.html",
-    "./manifest.json"
+    "./manifest.json",
+
+    // QR scanner library
+    "https://unpkg.com/html5-qrcode"
 ];
 
 
+// =====================================================
+// INSTALL SERVICE WORKER
+// =====================================================
+
+self.addEventListener("install", event => {
+
+    console.log("Service Worker: Installing...");
+
+    event.waitUntil(
+
+        caches.open(CACHE_NAME)
+            .then(cache => {
+
+                console.log(
+                    "Service Worker: Caching application files..."
+                );
+
+                return cache.addAll([
+                    "./",
+                    "./index.html",
+                    "./manifest.json"
+                ]);
+
+            })
+
+    );
+
+    self.skipWaiting();
+
+});
 
 
-self.addEventListener(
-    "install",
-    event => {
+// =====================================================
+// ACTIVATE SERVICE WORKER
+// =====================================================
 
-        console.log(
-            "Attendance Service Worker installing..."
-        );
+self.addEventListener("activate", event => {
 
-        event.waitUntil(
+    console.log("Service Worker: Activated.");
 
-            caches.open(
-                CACHE_NAME
-            )
-            .then(
-                cache => {
+    event.waitUntil(
 
-                    return cache.addAll(
-                        FILES_TO_CACHE
-                    );
+        caches.keys()
+            .then(cacheNames => {
 
-                }
-            )
+                return Promise.all(
 
-        );
-
-        self.skipWaiting();
-
-    }
-);
-
-
-
-
-self.addEventListener(
-    "activate",
-    event => {
-
-        console.log(
-            "Attendance Service Worker activated."
-        );
-
-        event.waitUntil(
-
-            caches.keys()
-            .then(
-                cacheNames => {
-
-                    return Promise.all(
-
-                        cacheNames
+                    cacheNames
                         .filter(
-                            name =>
-                                name !==
-                                CACHE_NAME
+                            cacheName =>
+                                cacheName !== CACHE_NAME
                         )
                         .map(
-                            name =>
-                                caches.delete(
-                                    name
-                                )
+                            cacheName =>
+                                caches.delete(cacheName)
                         )
 
-                    );
+                );
+
+            })
+
+    );
+
+    self.clients.claim();
+
+});
+
+
+// =====================================================
+// FETCH
+// =====================================================
+
+self.addEventListener("fetch", event => {
+
+    event.respondWith(
+
+        caches.match(event.request)
+            .then(cachedResponse => {
+
+                // Use cached file if available
+                if (cachedResponse) {
+
+                    return cachedResponse;
 
                 }
-            )
-
-        );
-
-        self.clients.claim();
-
-    }
-);
 
 
+                // Otherwise try the internet
+                return fetch(event.request)
+                    .then(networkResponse => {
 
+                        /*
+                         * Save successful requests
+                         * into the cache.
+                         */
 
-self.addEventListener(
-    "fetch",
-    event => {
+                        if (
+                            networkResponse &&
+                            networkResponse.status === 200 &&
+                            networkResponse.type !== "opaque"
+                        ) {
 
-        event.respondWith(
+                            const responseClone =
+                                networkResponse.clone();
 
-            caches.match(
-                event.request
-            )
-            .then(
-                cachedResponse => {
+                            caches.open(CACHE_NAME)
+                                .then(cache => {
 
-                    if (
-                        cachedResponse
-                    ) {
+                                    cache.put(
+                                        event.request,
+                                        responseClone
+                                    );
 
-                        return cachedResponse;
+                                });
 
-                    }
+                        }
 
+                        return networkResponse;
 
-                    return fetch(
-                        event.request
-                    );
+                    })
+                    .catch(() => {
 
-                }
-            )
-            .catch(
-                () => {
+                        /*
+                         * If internet is unavailable,
+                         * return the cached index page.
+                         */
 
-                    return caches.match(
-                        "./index.html"
-                    );
+                        return caches.match(
+                            "./index.html"
+                        );
 
-                }
-            )
+                    });
 
-        );
+            })
 
-    }
-);
+    );
+
+});
