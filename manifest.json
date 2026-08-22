@@ -1,0 +1,10 @@
+{
+  "name": "Student Attendance System",
+  "short_name": "Attendance",
+  "description": "Offline-capable student attendance scanner",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#2563eb",
+  "orientation": "portrait"
+}
