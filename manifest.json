@@ -1,10 +1,11 @@
 {
   "name": "Student Attendance System",
   "short_name": "Attendance",
-  "description": "Offline-capable student attendance scanner",
-  "start_url": "./",
+  "description": "Automated Student QR Code Attendance Scanner",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#2563eb",
-  "orientation": "portrait"
+  "orientation": "portrait-primary",
+  "icons": []
 }
