@@ -186,7 +186,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 0 30px}
   .input-group .btn{width:100%}
 }
 
-
 /* ===== HAMBURGER MENU + ATTENDANCE SHEETS ===== */
 .menu-wrap{position:relative}
 .menu-btn{
@@ -329,7 +328,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 0 30px}
       <div class="manual-section">
         <h3>Or enter Student ID manually</h3>
         <div class="input-group">
-          <input type="text" id="studentIdInput" placeholder="Enter Student ID">
+          <input type="text" id="studentIdInput" placeholder="Enter Student ID" onkeypress="handleKeyPress(event)">
           <button class="btn primary-btn" onclick="processManualID()">Submit</button>
         </div>
       </div>
@@ -435,41 +434,17 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 0 30px}
 
 <script>
 
-
-
 /* =====================================================
    GOOGLE APPS SCRIPT URL
 ===================================================== */
-
-const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbyPWMqQzXUI50IiaMPOc8SK3mYl6vF8jF5Yg-4pstArZ_oVfuBAoJHwgvv65OT3hggCvQ/exec";
-
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPWMqQzXUI50IiaMPOc8SK3mYl6vF8jF5Yg-4pstArZ_oVfuBAoJHwgvv65OT3hggCvQ/exec";
 
 /* =====================================================
    SYSTEM VARIABLES
 ===================================================== */
-
-let attendanceMode =
-"TIME IN";
-
-
-let attendanceRecords =
-JSON.parse(
-    localStorage.getItem(
-        "attendanceRecords"
-    )
-) || [];
-
-/*
- * Attendance sheets are stored locally so each event/activity
- * can have its own attendance session.
- */
-let attendanceSheets =
-JSON.parse(
-    localStorage.getItem(
-        "attendanceSheets"
-    )
-) || [];
+let attendanceMode = "TIME IN";
+let attendanceRecords = JSON.parse(localStorage.getItem("attendanceRecords")) || [];
+let attendanceSheets = JSON.parse(localStorage.getItem("attendanceSheets")) || [];
 
 if (!Array.isArray(attendanceSheets) || attendanceSheets.length === 0) {
     attendanceSheets = [{
@@ -480,9 +455,7 @@ if (!Array.isArray(attendanceSheets) || attendanceSheets.length === 0) {
     localStorage.setItem("attendanceSheets", JSON.stringify(attendanceSheets));
 }
 
-let activeSheetId =
-localStorage.getItem("activeAttendanceSheetId") ||
-attendanceSheets[0].id;
+let activeSheetId = localStorage.getItem("activeAttendanceSheetId") || attendanceSheets[0].id;
 
 if (!attendanceSheets.some(s => s.id === activeSheetId)) {
     activeSheetId = attendanceSheets[0].id;
@@ -498,6 +471,10 @@ function saveAttendanceSheets() {
     localStorage.setItem("activeAttendanceSheetId", activeSheetId);
 }
 
+function saveRecords() {
+    localStorage.setItem("attendanceRecords", JSON.stringify(attendanceRecords));
+}
+
 function updateActiveSheetUI() {
     const sheet = getActiveSheet();
     const nameEl = document.getElementById("activeSheetName");
@@ -505,2562 +482,232 @@ function updateActiveSheetUI() {
     if (nameEl) nameEl.textContent = sheet.name;
     if (dateEl) {
         dateEl.textContent = new Date(sheet.createdAt).toLocaleDateString([], {
-            year:"numeric", month:"short", day:"numeric"
+            year: "numeric", month: "short", day: "numeric"
         });
     }
 }
 
-let lastScannedCode =
-"";
-
-
-let lastScanTime =
-0;
-
-
-let isProcessing =
-false;
-
-
-let isSyncing =
-false;
-
+let lastScannedCode = "";
+let lastScanTime = 0;
+let isProcessing = false;
+let isSyncing = false;
+let audioContext = null;
+let soundEnabled = false;
 
 /* =====================================================
-   AUDIO
+   AUDIO UTILITIES
 ===================================================== */
-
-let audioContext =
-null;
-
-
-let soundEnabled =
-false;
-
-
-/* =====================================================
-   ENABLE SOUND
-===================================================== */
-
 function enableSound() {
-
     try {
-
-        const AudioContext =
-            window.AudioContext ||
-            window.webkitAudioContext;
-
-
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) {
-
-            document.getElementById(
-                "soundStatus"
-            ).textContent =
-            "Audio is not supported by this browser.";
-
+            document.getElementById("soundStatus").textContent = "Audio is not supported by this browser.";
             return;
-
         }
+        if (!audioContext) audioContext = new AudioContext();
+        if (audioContext.state === "suspended") audioContext.resume();
 
-
-        if (!audioContext) {
-
-            audioContext =
-                new AudioContext();
-
-        }
-
-
-        if (
-            audioContext.state ===
-            "suspended"
-        ) {
-
-            audioContext.resume();
-
-        }
-
-
-        soundEnabled =
-        true;
-
-
-        const button =
-            document.getElementById(
-                "soundButton"
-            );
-
-
-        button.textContent =
-            "🔊 SOUND ENABLED";
-
-
-        button.classList.add(
-            "sound-enabled"
-        );
-
-
-        document.getElementById(
-            "soundStatus"
-        ).textContent =
-        "Sound enabled. Scanner beep is ready.";
-
-
+        soundEnabled = true;
+        const button = document.getElementById("soundButton");
+        button.textContent = "🔊 SOUND ENABLED";
+        button.classList.add("sound-enabled");
+        document.getElementById("soundStatus").textContent = "Sound enabled. Scanner beep is ready.";
         playScannerBeep();
-
+    } catch (error) {
+        console.error("Audio initialization error:", error);
     }
-
-    catch (error) {
-
-        console.error(
-            "Audio initialization error:",
-            error
-        );
-
-    }
-
 }
-
-
-/* =====================================================
-   SCANNER BEEP
-===================================================== */
 
 function playScannerBeep() {
-
-    if (!soundEnabled) {
-        return;
-    }
-
-
+    if (!soundEnabled || !audioContext) return;
     try {
+        if (audioContext.state === "suspended") audioContext.resume();
+        const now = audioContext.currentTime;
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
-        if (!audioContext) {
-            return;
-        }
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(2200, now);
 
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
+        gainNode.gain.setValueAtTime(0.35, now + 0.25);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.30);
 
-        if (
-            audioContext.state ===
-            "suspended"
-        ) {
-
-            audioContext.resume();
-
-        }
-
-
-        const now =
-            audioContext.currentTime;
-
-
-        const oscillator =
-            audioContext.createOscillator();
-
-
-        const gainNode =
-            audioContext.createGain();
-
-
-        oscillator.connect(
-            gainNode
-        );
-
-
-        gainNode.connect(
-            audioContext.destination
-        );
-
-
-        oscillator.type =
-            "sine";
-
-
-        oscillator.frequency.setValueAtTime(
-            2200,
-            now
-        );
-
-
-        gainNode.gain.setValueAtTime(
-            0.0001,
-            now
-        );
-
-
-        gainNode.gain.exponentialRampToValueAtTime(
-            0.35,
-            now + 0.01
-        );
-
-
-        gainNode.gain.setValueAtTime(
-            0.35,
-            now + 0.25
-        );
-
-
-        gainNode.gain.exponentialRampToValueAtTime(
-            0.0001,
-            now + 0.30
-        );
-
-
-        oscillator.start(
-            now
-        );
-
-
-        oscillator.stop(
-            now + 0.30
-        );
-
+        oscillator.start(now);
+        oscillator.stop(now + 0.30);
+    } catch (error) {
+        console.log("Scanner beep error:", error);
     }
-
-    catch (error) {
-
-        console.log(
-            "Scanner beep error:",
-            error
-        );
-
-    }
-
 }
-
-
-/* =====================================================
-   ERROR SOUND
-===================================================== */
 
 function playErrorSound() {
-
-    if (!soundEnabled) {
-        return;
-    }
-
-
+    if (!soundEnabled || !audioContext) return;
     try {
+        if (audioContext.state === "suspended") audioContext.resume();
+        const now = audioContext.currentTime;
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
-        if (!audioContext) {
-            return;
-        }
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.type = "square";
+        oscillator.frequency.setValueAtTime(350, now);
 
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
 
-        const now =
-            audioContext.currentTime;
-
-
-        const oscillator =
-            audioContext.createOscillator();
-
-
-        const gainNode =
-            audioContext.createGain();
-
-
-        oscillator.connect(
-            gainNode
-        );
-
-
-        gainNode.connect(
-            audioContext.destination
-        );
-
-
-        oscillator.type =
-            "square";
-
-
-        oscillator.frequency.setValueAtTime(
-            350,
-            now
-        );
-
-
-        gainNode.gain.setValueAtTime(
-            0.0001,
-            now
-        );
-
-
-        gainNode.gain.exponentialRampToValueAtTime(
-            0.35,
-            now + 0.01
-        );
-
-
-        gainNode.gain.exponentialRampToValueAtTime(
-            0.0001,
-            now + 0.25
-        );
-
-
-        oscillator.start(
-            now
-        );
-
-
-        oscillator.stop(
-            now + 0.25
-        );
-
+        oscillator.start(now);
+        oscillator.stop(now + 0.25);
+    } catch (error) {
+        console.log("Error sound error:", error);
     }
-
-    catch (error) {
-
-        console.log(
-            "Error sound error:",
-            error
-        );
-
-    }
-
 }
 
-
 /* =====================================================
-   TODAY
+   TIME & DATE HELPERS
 ===================================================== */
-
 function getToday() {
-
-    const now =
-        new Date();
-
-
-    const year =
-        now.getFullYear();
-
-
-    const month =
-        String(
-            now.getMonth() + 1
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const day =
-        String(
-            now.getDate()
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    return (
-        year +
-        "-" +
-        month +
-        "-" +
-        day
-    );
-
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
-
-
-/* =====================================================
-   CURRENT TIME
-===================================================== */
 
 function getCurrentTime() {
-
-    const now =
-        new Date();
-
-
-    return now.toLocaleTimeString(
-        [],
-        {
-            hour:
-                "2-digit",
-
-            minute:
-                "2-digit",
-
-            second:
-                "2-digit"
-        }
-    );
-
+    return new Date().toLocaleTimeString([], {
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+    });
 }
-
-
-/* =====================================================
-   DISPLAY DATE
-===================================================== */
 
 function getDisplayDate() {
-
-    const now =
-        new Date();
-
-
-    return now.toLocaleDateString(
-        [],
-        {
-            year:
-                "numeric",
-
-            month:
-                "long",
-
-            day:
-                "numeric"
-        }
-    );
-
+    return new Date().toLocaleDateString([], {
+        year: "numeric", month: "long", day: "numeric"
+    });
 }
 
-
-document.getElementById(
-    "currentDate"
-).textContent =
-getDisplayDate();
-
+function updateClock() {
+    document.getElementById("liveClock").textContent = getCurrentTime();
+}
+setInterval(updateClock, 1000);
+updateClock();
+document.getElementById("currentDate").textContent = getDisplayDate();
 
 /* =====================================================
-   CONNECTION STATUS
+   CONNECTION & MESSAGES
 ===================================================== */
-
 function updateConnectionStatus() {
-
-    const status =
-        document.getElementById(
-            "connectionStatus"
-        );
-
-
+    const status = document.getElementById("connectionStatus");
     if (navigator.onLine) {
-
-        status.textContent =
-            "● Internet connected";
-
-        status.style.color =
-            "#16a34a";
-
+        status.textContent = "● Internet connected";
+        status.style.color = "#16a34a";
+    } else {
+        status.textContent = "● OFFLINE — Attendance stored locally";
+        status.style.color = "#dc2626";
     }
-
-    else {
-
-        status.textContent =
-            "● OFFLINE — Attendance stored locally";
-
-        status.style.color =
-            "#dc2626";
-
-    }
-
 }
 
+window.addEventListener("online", () => {
+    updateConnectionStatus();
+    showMessage("Internet restored. Synchronizing offline attendance...", "info");
+    setTimeout(syncOfflineRecords, 1000);
+});
 
-window.addEventListener(
-    "online",
-    function() {
+window.addEventListener("offline", () => {
+    updateConnectionStatus();
+    showMessage("Offline mode — attendance will be stored locally.", "info");
+});
 
-        updateConnectionStatus();
+function showMessage(text, type) {
+    const msgEl = document.getElementById("message");
+    msgEl.className = "message " + type;
+    msgEl.textContent = text;
+    setTimeout(() => { msgEl.style.display = "none"; }, 5000);
+}
 
-        showMessage(
-            "Internet restored. Synchronizing offline attendance...",
-            "info"
-        );
-
-        setTimeout(
-            function() {
-                syncOfflineRecords();
-            },
-            1000
-        );
-    }
-);
-
-
-window.addEventListener(
-    "offline",
-    function() {
-
-        updateConnectionStatus();
-
-        showMessage(
-            "Offline mode — attendance will be stored locally.",
-            "info"
-        );
-    }
-);
-
+function showStudentInfo(id, text) {
+    const infoEl = document.getElementById("studentInfo");
+    infoEl.style.display = "block";
+    infoEl.innerHTML = `<strong>ID: ${id}</strong><br><span>${text}</span>`;
+}
 
 /* =====================================================
-   SET MODE
+   MODE & INPUT HANDLERS
 ===================================================== */
-
-function setAttendanceMode(
-    mode
-) {
-
-    attendanceMode =
-        mode;
-
-
-    document.getElementById(
-        "modeDisplay"
-    ).textContent =
-    "Current Mode: " +
-    mode;
-
-
-    showMessage(
-        "Attendance mode changed to " +
-        mode,
-        "info"
-    );
-
+function setAttendanceMode(mode) {
+    attendanceMode = mode;
+    document.getElementById("modeDisplay").textContent = "Current Mode: " + mode;
+    document.getElementById("timeInModeBtn").classList.toggle("active", mode === 'TIME IN');
+    document.getElementById("timeOutModeBtn").classList.toggle("active", mode === 'TIME OUT');
+    showMessage("Attendance mode changed to " + mode, "info");
 }
 
+function processManualID() {
+    const input = document.getElementById("studentIdInput");
+    const val = input.value;
+    input.value = "";
+    processStudent(val);
+}
+
+function handleKeyPress(e) {
+    if (e.key === "Enter") processManualID();
+}
 
 /* =====================================================
    PROCESS STUDENT
-   OFFLINE FIRST
 ===================================================== */
-
-async function processStudent(
-    studentId
-) {
-
-    if (!studentId) {
-
+async function processStudent(studentId) {
+    if (!studentId || !studentId.trim()) {
         playErrorSound();
-
-
-        showMessage(
-            "Please enter a valid Student ID.",
-            "error"
-        );
-
-
-        return;
-
-    }
-
-
-    studentId =
-        studentId.trim();
-
-
-    if (!studentId) {
-
-        playErrorSound();
-
-
-        showMessage(
-            "Please enter a valid Student ID.",
-            "error"
-        );
-
-
-        return;
-
-    }
-
-
-    if (isProcessing) {
-
-        return;
-
-    }
-
-
-    isProcessing =
-        true;
-
-
-    try {
-
-        const today =
-            getToday();
-
-
-        const currentTime =
-            getCurrentTime();
-
-
-        let record =
-            attendanceRecords.find(
-                r =>
-                    r.studentId ===
-                        studentId &&
-                    r.date ===
-                        today &&
-                    (r.sheetId || attendanceSheets[0].id) === activeSheetId
-            );
-
-
-        /* =================================================
-           TIME IN
-        ================================================= */
-
-        if (
-            attendanceMode ===
-            "TIME IN"
-        ) {
-
-
-            /*
-             * Already completed.
-             */
-
-            if (
-                record &&
-                record.status ===
-                    "COMPLETED"
-            ) {
-
-                playErrorSound();
-
-
-                showStudentInfo(
-                    studentId,
-                    "Attendance already completed."
-                );
-
-
-                showMessage(
-                    "Attendance already completed for today.",
-                    "info"
-                );
-
-
-                return;
-
-            }
-
-
-            /*
-             * Existing incomplete record.
-             */
-
-            if (
-                record &&
-                record.status ===
-                    "INCOMPLETE"
-            ) {
-
-                record.timeIn =
-                    currentTime;
-
-
-                record.remark =
-                    "";
-
-
-                record.status =
-                    record.timeOut
-                        ? "COMPLETED"
-                        : "PRESENT";
-
-
-                record.synced =
-                    false;
-
-            }
-
-
-            /*
-             * New attendance.
-             */
-
-            else if (!record) {
-
-                record = {
-
-                    studentId:
-                        studentId,
-
-                    sheetId:
-                        activeSheetId,
-
-                    sheetName:
-                        getActiveSheet().name,
-
-                    date:
-                        today,
-
-                    timeIn:
-                        currentTime,
-
-                    timeOut:
-                        "",
-
-                    remark:
-                        "",
-
-                    status:
-                        "PRESENT",
-
-                    synced:
-                        false
-
-                };
-
-
-                attendanceRecords.push(
-                    record
-                );
-
-            }
-
-
-            /*
-             * SAVE LOCALLY FIRST.
-             */
-
-            saveRecords();
-
-
-            displayAttendance();
-
-
-            playScannerBeep();
-
-
-            showStudentInfo(
-                studentId,
-                "Time In recorded at " +
-                record.timeIn +
-                " — " +
-                record.status
-            );
-
-
-            showMessage(
-                "Time In saved locally.",
-                "success"
-            );
-
-
-            /*
-             * Try Google Sheets.
-             */
-
-            syncSingleRecord(
-                record
-            );
-
-
-            return;
-
-        }
-
-
-        /* =================================================
-           TIME OUT
-        ================================================= */
-
-        if (
-            attendanceMode ===
-            "TIME OUT"
-        ) {
-
-
-            /*
-             * No Time In.
-             */
-
-            if (
-                !record ||
-                !record.timeIn
-            ) {
-
-                if (!record) {
-
-                    record = {
-
-                        studentId:
-                            studentId,
-
-                        date:
-                            today,
-
-                        timeIn:
-                            "",
-
-                        timeOut:
-                            currentTime,
-
-                        remark:
-                            "NO TIME IN",
-
-                        status:
-                            "INCOMPLETE",
-
-                        synced:
-                            false
-
-                    };
-
-
-                    attendanceRecords.push(
-                        record
-                    );
-
-                }
-
-                else {
-
-                    record.timeOut =
-                        currentTime;
-
-
-                    record.remark =
-                        "NO TIME IN";
-
-
-                    record.status =
-                        "INCOMPLETE";
-
-
-                    record.synced =
-                        false;
-
-                }
-
-
-                /*
-                 * SAVE LOCALLY FIRST.
-                 */
-
-                saveRecords();
-
-
-                displayAttendance();
-
-
-                showStudentInfo(
-                    studentId,
-                    "Time Out recorded at " +
-                    record.timeOut +
-                    " — NO TIME IN — INCOMPLETE"
-                );
-
-
-                showMessage(
-                    "Time Out saved locally — NO TIME IN — INCOMPLETE.",
-                    "info"
-                );
-
-
-                syncSingleRecord(
-                    record
-                );
-
-
-                return;
-
-            }
-
-
-            /*
-             * Already completed.
-             */
-
-            if (
-                record.status ===
-                    "COMPLETED"
-            ) {
-
-                playErrorSound();
-
-
-                showStudentInfo(
-                    studentId,
-                    "Attendance already completed."
-                );
-
-
-                showMessage(
-                    "Attendance already completed for today.",
-                    "info"
-                );
-
-
-                return;
-
-            }
-
-
-            /*
-             * Normal Time Out.
-             */
-
-            record.timeOut =
-                currentTime;
-
-
-            record.status =
-                "COMPLETED";
-
-
-            record.remark =
-                "";
-
-
-            record.synced =
-                false;
-
-
-            /*
-             * SAVE LOCALLY FIRST.
-             */
-
-            saveRecords();
-
-
-            displayAttendance();
-
-
-            showStudentInfo(
-                studentId,
-                "Time Out recorded at " +
-                record.timeOut +
-                " — COMPLETED"
-            );
-
-
-            showMessage(
-                "Time Out saved locally — COMPLETED.",
-                "success"
-            );
-
-
-            syncSingleRecord(
-                record
-            );
-
-
-            return;
-
-        }
-
-    }
-
-    finally {
-
-        isProcessing =
-            false;
-
-    }
-
-}
-
-
-/* =====================================================
-   SYNCHRONIZE ONE RECORD
-   OFFLINE-FIRST + AUTOMATIC RETRY
-===================================================== */
-
-async function syncSingleRecord(record) {
-
-    if (!record) {
-        return false;
-    }
-
-    if (record.synced === true) {
-        return true;
-    }
-
-    if (!navigator.onLine) {
-        console.log("Offline. Record remains pending:", record.studentId);
-        return false;
-    }
-
-    try {
-
-        const response = await fetch(
-            SCRIPT_URL,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8"
-                },
-                body: JSON.stringify({
-                    studentId: record.studentId,
-                    action: record.timeOut ? "TIME OUT" : "TIME IN",
-                    date: record.date,
-                    timeIn: record.timeIn,
-                    timeOut: record.timeOut,
-                    remark: record.remark,
-                    status: record.status,
-                    eventName: record.sheetName || getActiveSheet().name
-                })
-            }
-        );
-
-        if (!response.ok) {
-            console.warn("Apps Script HTTP error:", response.status);
-            return false;
-        }
-
-        const result = await response.json();
-
-        console.log("Google Sheets response:", result);
-
-        if (result && result.success === true) {
-
-            const localRecord = attendanceRecords.find(
-                r =>
-                    r.studentId === record.studentId &&
-                    r.date === record.date &&
-                    (r.sheetId || attendanceSheets[0].id) === (record.sheetId || attendanceSheets[0].id)
-            );
-
-            if (localRecord) {
-                localRecord.synced = true;
-                saveRecords();
-                displayAttendance();
-            }
-
-            return true;
-        }
-
-        console.warn(
-            "Google Sheets rejected record:",
-            result ? result.message : "Unknown response"
-        );
-
-        return false;
-
-    }
-    catch (error) {
-
-        console.warn(
-            "Synchronization failed. Record remains pending:",
-            record.studentId,
-            error
-        );
-
-        return false;
-    }
-}
-
-
-/* =====================================================
-   SYNCHRONIZE ALL PENDING RECORDS
-===================================================== */
-
-async function syncOfflineRecords() {
-
-    if (!navigator.onLine) {
+        showMessage("Please enter a valid Student ID.", "error");
         return;
     }
 
-    if (isSyncing) {
-        return;
-    }
-
-    const pendingRecords = attendanceRecords.filter(
-        record => record.synced !== true
-    );
-
-    if (pendingRecords.length === 0) {
-        return;
-    }
-
-    isSyncing = true;
-
-    try {
-
-        console.log(
-            "Starting synchronization of " +
-            pendingRecords.length +
-            " pending record(s)."
-        );
-
-        let successful = 0;
-        let failed = 0;
-
-        /*
-         * IMPORTANT:
-         * Do NOT stop the queue when one record fails.
-         * Every pending record gets an opportunity to sync.
-         */
-        for (const record of pendingRecords) {
-
-            if (!navigator.onLine) {
-                break;
-            }
-
-            const success = await syncSingleRecord(record);
-
-            if (success) {
-                successful++;
-            }
-            else {
-                failed++;
-            }
-
-            /* Small delay between requests. */
-            await new Promise(
-                resolve => setTimeout(resolve, 300)
-            );
-        }
-
-        displayAttendance();
-
-        const remaining = attendanceRecords.filter(
-            record => record.synced !== true
-        ).length;
-
-        console.log(
-            "Synchronization complete. Successful:",
-            successful,
-            "Failed:",
-            failed,
-            "Remaining:",
-            remaining
-        );
-
-        if (remaining === 0 && successful > 0) {
-
-            showMessage(
-                "All attendance records synchronized successfully.",
-                "success"
-            );
-
-        }
-        else if (successful > 0) {
-
-            showMessage(
-                successful +
-                " record(s) synchronized. " +
-                remaining +
-                " record(s) still pending.",
-                "info"
-            );
-
-        }
-        else if (remaining > 0) {
-
-            console.log(
-                remaining +
-                " record(s) remain pending and will be retried automatically."
-            );
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "Synchronization process error:",
-            error
-        );
-
-    }
-    finally {
-        isSyncing = false;
-    }
-}
-
-
-/* =====================================================
-   AUTOMATIC RETRY
-===================================================== */
-
-const SYNC_RETRY_INTERVAL = 10000;
-
-setInterval(
-    function() {
-
-        if (!navigator.onLine) {
-            return;
-        }
-
-        const hasPending = attendanceRecords.some(
-            record => record.synced !== true
-        );
-
-        if (hasPending) {
-            console.log("Automatic retry: pending records detected.");
-            syncOfflineRecords();
-        }
-
-    },
-    SYNC_RETRY_INTERVAL
-);
-
-
-/* =====================================================
-   MULTI-TAB STORAGE SYNCHRONIZATION
-===================================================== */
-
-window.addEventListener(
-    "storage",
-    function(event) {
-
-        if (event.key !== "attendanceRecords") {
-            return;
-        }
-
-        try {
-
-            attendanceRecords =
-                JSON.parse(event.newValue || "[]") || [];
-
-            displayAttendance();
-
-            console.log(
-                "Attendance records updated from another tab."
-            );
-
-        }
-        catch (error) {
-
-            console.error(
-                "Unable to read attendance records from another tab:",
-                error
-            );
-
-        }
-    }
-);
-
-
-/* =====================================================
-   MANUAL ID
-===================================================== */
-
-function processManualID() {
-
-    const input =
-        document.getElementById(
-            "studentIdInput"
-        );
-
-
-    const studentId =
-        input.value.trim();
-
-
-    if (!studentId) {
-
-        playErrorSound();
-
-
-        showMessage(
-            "Please enter a Student ID.",
-            "error"
-        );
-
-
-        return;
-
-    }
-
-
-    playScannerBeep();
-
-
-    processStudent(
-        studentId
-    );
-
-
-    input.value =
-        "";
-
-}
-
-
-/* =====================================================
-   ENTER KEY
-===================================================== */
-
-document
-    .getElementById(
-        "studentIdInput"
-    )
-    .addEventListener(
-        "keydown",
-        function(event) {
-
-            if (
-                event.key ===
-                "Enter"
-            ) {
-
-                processManualID();
-
-            }
-
-        }
-    );
-
-
-/* =====================================================
-   QR SCAN SUCCESS
-===================================================== */
-
-function onScanSuccess(
-    decodedText,
-    decodedResult
-) {
-
-    const now =
-        Date.now();
-
-
-    if (
-        decodedText ===
-            lastScannedCode &&
-        now -
-            lastScanTime <
-            3000
-    ) {
-
-        return;
-
-    }
-
-
-    if (isProcessing) {
-
-        return;
-
-    }
-
-
-    lastScannedCode =
-        decodedText;
-
-
-    lastScanTime =
-        now;
-
-
-    playScannerBeep();
-
-
-    document.getElementById(
-        "scannerStatus"
-    ).textContent =
-        "QR code detected!";
-
-
-    processStudent(
-        decodedText
-    );
-
-}
-
-
-/* =====================================================
-   QR SCAN FAILURE
-===================================================== */
-
-function onScanFailure(
-    error
-) {
-
-    /*
-     * Normal QR scanning failures
-     * are ignored.
-     */
-
-}
-
-
-/* =====================================================
-   START QR SCANNER
-===================================================== */
-
-const html5QrCodeScanner =
-    new Html5QrcodeScanner(
-
-        "reader",
-
-        {
-
-            fps:
-                10,
-
-            qrbox:
-                {
-                    width:
-                        250,
-
-                    height:
-                        250
-                },
-
-            rememberLastUsedCamera:
-                true,
-
-            supportedScanTypes:
-                [
-
-                    Html5QrcodeScanType
-                        .SCAN_TYPE_CAMERA
-
-                ]
-
-        },
-
-        false
-
-    );
-
-
-html5QrCodeScanner.render(
-    onScanSuccess,
-    onScanFailure
-);
-
-
-/* =====================================================
-   SAVE LOCAL RECORDS
-===================================================== */
-
-function saveRecords() {
-
-    try {
-
-        localStorage.setItem(
-            "attendanceRecords",
-            JSON.stringify(
-                attendanceRecords
-            )
-        );
-
-
-        console.log(
-            "Attendance saved locally."
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Unable to save attendance locally:",
-            error
-        );
-
-
-        showMessage(
-            "WARNING: Unable to save attendance on this device.",
-            "error"
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   DISPLAY ATTENDANCE
-===================================================== */
-
-function displayAttendance() {
-
-    const table =
-        document.getElementById(
-            "attendanceTable"
-        );
-
-
-    const search =
-        document.getElementById(
-            "searchInput"
-        )
-        .value
-        .toLowerCase();
-
-
-    const today =
-        getToday();
-
-
-    const todayRecords =
-        attendanceRecords.filter(
-            record =>
-                record.date ===
-                today &&
-                (record.sheetId || attendanceSheets[0].id) === activeSheetId
-        );
-
-
-    const filteredRecords =
-        todayRecords.filter(
-            record =>
-                record.studentId
-                    .toLowerCase()
-                    .includes(
-                        search
-                    )
-        );
-
-
-    table.innerHTML =
-        "";
-
-
-    if (
-        filteredRecords.length ===
-        0
-    ) {
-
-        table.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="8"
-                    class="empty-state">
-
-                    No attendance records found.
-
-                </td>
-
-            </tr>
-
-        `;
-
-    }
-
-
-    filteredRecords.forEach(
-        (
-            record,
-            index
-        ) => {
-
-            const row =
-                document.createElement(
-                    "tr"
-                );
-
-
-            let statusClass =
-                "present";
-
-
-            if (
-                record.status ===
-                "INCOMPLETE"
-            ) {
-
-                statusClass =
-                    "no-time-in";
-
-            }
-
-            else if (
-                record.status ===
-                "COMPLETED"
-            ) {
-
-                statusClass =
-                    "completed";
-
-            }
-
-
-            const statusText =
-                record.status ||
-                "PRESENT";
-
-
-            const remarkText =
-                record.remark ||
-                "—";
-
-
-            const syncText =
-                record.synced === true
-                    ? "SYNCED"
-                    : "PENDING";
-
-
-            const syncClass =
-                record.synced === true
-                    ? "synced"
-                    : "pending";
-
-
-            row.innerHTML = `
-
-                <td>
-                    ${index + 1}
-                </td>
-
-                <td>
-
-                    <strong>
-                        ${escapeHTML(
-                            record.studentId
-                        )}
-                    </strong>
-
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        record.date
-                    )}
-                </td>
-
-                <td>
-                    ${
-                        escapeHTML(
-                            record.timeIn ||
-                            "—"
-                        )
-                    }
-                </td>
-
-                <td>
-                    ${
-                        escapeHTML(
-                            record.timeOut ||
-                            "—"
-                        )
-                    }
-                </td>
-
-                <td>
-
-                    <span
-                        class="status-badge ${
-                            record.status ===
-                            "INCOMPLETE"
-                            ? "no-time-in"
-                            : ""
-                        }">
-
-                        ${
-                            escapeHTML(
-                                remarkText
-                            )
-                        }
-
-                    </span>
-
-                </td>
-
-                <td>
-
-                    <span
-                        class="status-badge ${statusClass}">
-
-                        ${escapeHTML(
-                            statusText
-                        )}
-
-                    </span>
-
-                </td>
-
-                <td>
-
-                    <span
-                        class="status-badge ${syncClass}">
-
-                        ${syncText}
-
-                    </span>
-
-                </td>
-
-            `;
-
-
-            table.appendChild(
-                row
-            );
-
-        }
-    );
-
-
-    updateStatistics();
-
-}
-
-
-/* =====================================================
-   STATISTICS
-===================================================== */
-
-function updateStatistics() {
-
-    const today =
-        getToday();
-
-
-    const todayRecords =
-        attendanceRecords.filter(
-            record =>
-                record.date ===
-                today
-        );
-
-
-    const timeIn =
-        todayRecords.filter(
-            record =>
-                record.timeIn
-        ).length;
-
-
-    const timeOut =
-        todayRecords.filter(
-            record =>
-                record.timeOut
-        ).length;
-
-
-    document.getElementById(
-        "totalStudents"
-    ).textContent =
-        todayRecords.length;
-
-
-    document.getElementById(
-        "timeInCount"
-    ).textContent =
-        timeIn;
-
-
-    document.getElementById(
-        "timeOutCount"
-    ).textContent =
-        timeOut;
-
-}
-
-
-/* =====================================================
-   MESSAGE
-===================================================== */
-
-function showMessage(
-    text,
-    type
-) {
-
-    const message =
-        document.getElementById(
-            "message"
-        );
-
-
-    message.textContent =
-        text;
-
-
-    message.className =
-        "message " +
-        type;
-
-
-    setTimeout(
-        function() {
-
-            message.className =
-                "message";
-
-        },
-        5000
-    );
-
-}
-
-
-/* =====================================================
-   STUDENT INFO
-===================================================== */
-
-function showStudentInfo(
-    studentId,
-    message
-) {
-
-    const info =
-        document.getElementById(
-            "studentInfo"
-        );
-
-
-    info.innerHTML = `
-
-        <strong>
-            Student ID:
-        </strong>
-
-        ${escapeHTML(
-            studentId
-        )}
-
-        <br><br>
-
-        <strong>
-            Record:
-        </strong>
-
-        ${escapeHTML(
-            message
-        )}
-
-    `;
-
-
-    info.style.display =
-        "block";
-
-
-    setTimeout(
-        function() {
-
-            info.style.display =
-                "none";
-
-        },
-        5000
-    );
-
-}
-
-
-/* =====================================================
-   HTML SECURITY
-===================================================== */
-
-function escapeHTML(
-    value
-) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        value;
-
-
-    return div.innerHTML;
-
-}
-
-
-/* =====================================================
-   EXPORT CSV
-===================================================== */
-
-function exportCSV() {
-
-    const today =
-        getToday();
-
-
-    const records =
-        attendanceRecords.filter(
-            record =>
-                record.date ===
-                today
-        );
-
-
-    if (
-        records.length ===
-        0
-    ) {
-
-        playErrorSound();
-
-
-        showMessage(
-            "There are no local attendance records to export.",
-            "error"
-        );
-
-
-        return;
-
-    }
-
-
-    let csv =
-        "Student ID,Date,Time In,Time Out,Late/No Time In,Attendance Status,Sync Status\n";
-
-
-    records.forEach(
-        record => {
-
-            csv +=
-                `"${record.studentId}",` +
-                `"${record.date}",` +
-                `"${record.timeIn || ""}",` +
-                `"${record.timeOut || ""}",` +
-                `"${record.remark || ""}",` +
-                `"${record.status || ""}",` +
-                `"${record.synced ? "SYNCED" : "PENDING"}"\n`;
-
-        }
-    );
-
-
-    const blob =
-        new Blob(
-            [csv],
-            {
-                type:
-                    "text/csv;charset=utf-8;"
-            }
-        );
-
-
-    const url =
-        URL.createObjectURL(
-            blob
-        );
-
-
-    const link =
-        document.createElement(
-            "a"
-        );
-
-
-    link.href =
-        url;
-
-
-    link.download =
-        "attendance-" +
-        today +
-        ".csv";
-
-
-    document.body.appendChild(
-        link
-    );
-
-
-    link.click();
-
-
-    document.body.removeChild(
-        link
-    );
-
-
-    URL.revokeObjectURL(
-        url
-    );
-
-
-    showMessage(
-        "Attendance CSV exported successfully.",
-        "success"
-    );
-
-}
-
-
-/* =====================================================
-   CLEAR LOCAL RECORDS
-===================================================== */
-
-function clearAttendance() {
-
-    const confirmation =
-        confirm(
-
-            "Are you sure you want to delete today's local attendance records?\n\n" +
-
-            "WARNING: Any records marked PENDING have NOT yet been sent to Google Sheets.\n\n" +
-
-            "Deleting them now will permanently remove them from this device."
-
-        );
-
-
-    if (!confirmation) {
-
-        return;
-
-    }
-
-
-    const today =
-        getToday();
-
-
-    attendanceRecords =
-        attendanceRecords.filter(
-            record =>
-                record.date !==
-                today
-        );
-
-
-    saveRecords();
-
-
-    displayAttendance();
-
-
-    showMessage(
-        "Today's local records have been cleared.",
-        "success"
-    );
-
-}
-
-
-/* =====================================================
-   INITIALIZE
-===================================================== */
-
-updateConnectionStatus();
-
-displayAttendance();
-updateConnectionStatus();
-
-
-/*
- * Attempt synchronization when the page
- * starts and internet is available.
- */
-
-if (navigator.onLine) {
-
-    setTimeout(
-        function() {
-            syncOfflineRecords();
-        },
-        1500
-    );
-}
-
-
-/* =====================================================
-   SERVICE WORKER REGISTRATION
-===================================================== */
-
-if (
-    "serviceWorker" in
-    navigator
-) {
-
-    window.addEventListener(
-        "load",
-        function() {
-
-            navigator.serviceWorker
-                .register(
-                    "./service-worker.js"
-                )
-                .then(
-                    function(registration) {
-
-                        console.log(
-                            "Service Worker registered:",
-                            registration.scope
-                        );
-
-                    }
-                )
-                .catch(
-                    function(error) {
-
-                        console.error(
-                            "Service Worker registration failed:",
-                            error
-                        );
-
-                    }
-                );
-
-        }
-    );
-
-}
-
-
-
-/* UI ENHANCEMENTS */
-function updateLiveClock() {
-  const now = new Date();
-  const clock = document.getElementById("liveClock");
-  if (clock) {
-    clock.textContent = now.toLocaleTimeString([], {
-      hour: "2-digit", minute: "2-digit", second: "2-digit"
-    });
-  }
-}
-setInterval(updateLiveClock, 1000);
-updateLiveClock();
-
-function updatePendingCount() {
-  const el = document.getElementById("pendingCount");
-  if (el) {
-    el.textContent = attendanceRecords.filter(r =>
-      r.synced !== true &&
-      r.date === getToday() &&
-      (r.sheetId || attendanceSheets[0].id) === activeSheetId
-    ).length;
-  }
-}
-
-const originalDisplayAttendance = displayAttendance;
-displayAttendance = function() {
-  originalDisplayAttendance();
-  updatePendingCount();
-};
-
-const originalSetAttendanceMode = setAttendanceMode;
-setAttendanceMode = function(mode) {
-  originalSetAttendanceMode(mode);
-  const tin = document.getElementById("timeInModeBtn");
-  const tout = document.getElementById("timeOutModeBtn");
-  if (tin && tout) {
-    tin.classList.toggle("active", mode === "TIME IN");
-    tout.classList.toggle("active", mode === "TIME OUT");
-  }
-};
-
-const originalUpdateConnectionStatus = updateConnectionStatus;
-updateConnectionStatus = function() {
-  originalUpdateConnectionStatus();
-  const el = document.getElementById("connectionStatus");
-  if (!el) return;
-  if (navigator.onLine) {
-    el.textContent = "● ONLINE";
-    el.style.background = "#dcfce7";
-    el.style.color = "#166534";
-  } else {
-    el.textContent = "● OFFLINE • SAVING LOCALLY";
-    el.style.background = "#fee2e2";
-    el.style.color = "#991b1b";
-  }
-};
-
-updatePendingCount();
-
-/* =====================================================
-   ATTENDANCE SHEETS / HAMBURGER MENU
-===================================================== */
-
-function toggleMainMenu() {
-    const menu = document.getElementById("mainMenu");
-    if (menu) menu.classList.toggle("open");
-}
-
-function closeMainMenu() {
-    const menu = document.getElementById("mainMenu");
-    if (menu) menu.classList.remove("open");
-}
-
-document.addEventListener("click", function(event) {
-    const wrap = document.querySelector(".menu-wrap");
-    if (wrap && !wrap.contains(event.target)) closeMainMenu();
-});
-
-function openNewAttendanceSheet() {
-    const panel = document.getElementById("newSheetPanel");
-    const input = document.getElementById("eventNameInput");
-    if (panel) panel.classList.add("open");
-    if (input) {
-        input.value = "";
-        setTimeout(() => input.focus(), 50);
-    }
-}
-
-function closeNewAttendanceSheet(event) {
-    if (event && event.target !== event.currentTarget) return;
-    const panel = document.getElementById("newSheetPanel");
-    if (panel) panel.classList.remove("open");
-}
-
-function createNewAttendanceSheet() {
-    const input = document.getElementById("eventNameInput");
-    const name = (input ? input.value : "").trim();
-
-    if (!name) {
-        showMessage("Please enter an event/activity name.", "error");
-        if (input) input.focus();
-        return;
-    }
-
-    const sheet = {
-        id: "sheet-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
-        name: name,
-        createdAt: new Date().toISOString()
-    };
-
-    attendanceSheets.unshift(sheet);
-    activeSheetId = sheet.id;
-    saveAttendanceSheets();
-    updateActiveSheetUI();
-
-    // Reset the scanner workflow for the new session.
-    lastScannedCode = "";
-    lastScanTime = 0;
-    displayAttendance();
-    updatePendingCount();
-
-    const panel = document.getElementById("newSheetPanel");
-    if (panel) panel.classList.remove("open");
-
-    showMessage('New attendance sheet "' + name + '" is now active.', "success");
-}
-
-function openAttendanceRecords() {
-    const panel = document.getElementById("recordsPanel");
-    if (panel) panel.classList.add("open");
-    renderAttendanceSheets();
-}
-
-function closeAttendanceRecords(event) {
-    if (event && event.target !== event.currentTarget) return;
-    const panel = document.getElementById("recordsPanel");
-    if (panel) panel.classList.remove("open");
-}
-
-function renderAttendanceSheets() {
-    const list = document.getElementById("sheetList");
-    if (!list) return;
-
-    list.innerHTML = "";
-
-    attendanceSheets.forEach(sheet => {
-        const count = attendanceRecords.filter(
-            r => (r.sheetId || attendanceSheets[0].id) === sheet.id
-        ).length;
-
-        const row = document.createElement("div");
-        row.className = "sheet-row";
-
-        const info = document.createElement("div");
-        const strong = document.createElement("strong");
-        strong.textContent = sheet.name;
-
-        const small = document.createElement("small");
-        small.textContent =
-            new Date(sheet.createdAt).toLocaleDateString([], {
-                year:"numeric", month:"long", day:"numeric"
-            }) + " • " + count + " record" + (count === 1 ? "" : "s");
-
-        info.appendChild(strong);
-        info.appendChild(small);
-
-        const actions = document.createElement("div");
-        const button = document.createElement("button");
-        button.className = "btn " + (sheet.id === activeSheetId ? "success-btn" : "primary-btn");
-        button.textContent = sheet.id === activeSheetId ? "✓ Active" : "Open";
-        button.onclick = function() {
-            activeSheetId = sheet.id;
-            saveAttendanceSheets();
-            updateActiveSheetUI();
-            displayAttendance();
-            updatePendingCount();
-            closeAttendanceRecords();
-            showMessage('Attendance sheet "' + sheet.name + '" is now active.', "info");
-        };
-
-        actions.appendChild(button);
-        row.appendChild(info);
-        row.appendChild(actions);
-        list.appendChild(row);
-    });
-}
-
-/* Enter key creates the new sheet. */
-document.addEventListener("keydown", function(event) {
-    const panel = document.getElementById("newSheetPanel");
-    if (panel && panel.classList.contains("open") && event.key === "Enter") {
-        event.preventDefault();
-        createNewAttendanceSheet();
-    }
-});
-
-/* Initialize sheet UI after the existing page initialization. */
-updateActiveSheetUI();
-
-</script>
-
-<script>
-/* =====================================================
-   CENTRALIZED MULTI-DEVICE MODE
-   Google Sheets is the shared source of truth.
-===================================================== */
-
-const CENTRAL_POLL_INTERVAL = 5000;
-const DEVICE_ID_KEY = "attendanceDeviceId";
-const CENTRAL_DEVICE_ID = localStorage.getItem(DEVICE_ID_KEY) ||
-    ("device-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8));
-localStorage.setItem(DEVICE_ID_KEY, CENTRAL_DEVICE_ID);
-
-let centralLastStateHash = "";
-let centralLoading = false;
-let centralPollTimer = null;
-
-function centralFetch(action, payload = {}) {
-    return fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(Object.assign({ action }, payload))
-    }).then(async response => {
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        const result = await response.json();
-        if (!result || result.success !== true) {
-            throw new Error(result && result.message ? result.message : "Server request failed");
-        }
-        return result;
-    });
-}
-
-async function loadCentralState(silent = true) {
-    if (!navigator.onLine || centralLoading) return false;
-    centralLoading = true;
-    try {
-        const response = await fetch(
-            SCRIPT_URL + "?action=GET_STATE&date=" + encodeURIComponent(getToday()),
-            { method: "GET", cache: "no-store" }
-        );
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        const state = await response.json();
-        if (!state || state.success !== true) throw new Error(state && state.message || "Unable to load shared state");
-
-        const hash = JSON.stringify({ sheets: state.sheets || [], records: state.records || [] });
-        if (hash !== centralLastStateHash) {
-            centralLastStateHash = hash;
-            applyCentralState(state);
-        }
-        return true;
-    } catch (error) {
-        console.warn("Central state unavailable:", error);
-        return false;
-    } finally {
-        centralLoading = false;
-    }
-}
-
-function applyCentralState(state) {
-    const serverSheets = Array.isArray(state.sheets) ? state.sheets : [];
-    const serverRecords = Array.isArray(state.records) ? state.records : [];
-
-    /* Shared attendance sessions replace device-only session lists. */
-    if (serverSheets.length) {
-        attendanceSheets = serverSheets.map(s => ({
-            id: s.id,
-            name: s.name,
-            createdAt: s.createdAt
-        }));
-
-        if (!attendanceSheets.some(s => s.id === activeSheetId)) {
-            activeSheetId = attendanceSheets[0].id;
-        }
-        saveAttendanceSheets();
-        updateActiveSheetUI();
-    }
-
-    /* Merge today's server records into the local cache. */
-    const localPending = attendanceRecords.filter(r => r.synced !== true);
-    const serverKeys = new Set();
-
-    serverRecords.forEach(serverRecord => {
-        const key = centralRecordKey(serverRecord);
-        serverKeys.add(key);
-        const localIndex = attendanceRecords.findIndex(r => centralRecordKey(r) === key);
-        const normalized = Object.assign({}, serverRecord, { synced: true });
-
-        if (localIndex >= 0) {
-            /* Do not overwrite a newer unsynced local record. */
-            if (attendanceRecords[localIndex].synced === true) {
-                attendanceRecords[localIndex] = normalized;
-            } else if (!attendanceRecords[localIndex].timeOut && serverRecord.timeOut) {
-                attendanceRecords[localIndex] = normalized;
-            }
-        } else {
-            attendanceRecords.push(normalized);
-        }
-    });
-
-    /* Keep pending local records so offline work is not lost. */
-    attendanceRecords = attendanceRecords.filter(r => {
-        if (r.synced !== true) return true;
-        return serverKeys.has(centralRecordKey(r)) || r.date !== getToday();
-    });
-
-    saveRecords();
-    displayAttendance();
-    updatePendingCount();
-}
-
-function centralRecordKey(record) {
-    return [
-        record.sheetId || record.eventId || "general",
-        record.date || "",
-        String(record.studentId || "").trim().toUpperCase()
-    ].join("|");
-}
-
-/* Centralized sheet creation: all devices see the same attendance sessions. */
-createNewAttendanceSheet = async function() {
-    const input = document.getElementById("eventNameInput");
-    const name = (input ? input.value : "").trim();
-
-    if (!name) {
-        showMessage("Please enter an event/activity name.", "error");
-        if (input) input.focus();
-        return;
-    }
-
-    try {
-        const result = await centralFetch("CREATE_SHEET", {
-            name: name,
-            deviceId: CENTRAL_DEVICE_ID
-        });
-
-        const sheet = result.sheet;
-        attendanceSheets = Array.isArray(result.sheets) ? result.sheets : [sheet];
-        activeSheetId = sheet.id;
-        saveAttendanceSheets();
-        updateActiveSheetUI();
-        displayAttendance();
-        updatePendingCount();
-
-        const panel = document.getElementById("newSheetPanel");
-        if (panel) panel.classList.remove("open");
-        showMessage('Shared attendance sheet "' + sheet.name + '" is now active on this device.', "success");
-    } catch (error) {
-        console.error(error);
-        showMessage("Unable to create the shared attendance sheet. Check your connection.", "error");
-    }
-};
-
-/* Shared attendance-record list. */
-renderAttendanceSheets = function() {
-    const list = document.getElementById("sheetList");
-    if (!list) return;
-    list.innerHTML = "";
-
-    attendanceSheets.forEach(sheet => {
-        const count = attendanceRecords.filter(r =>
-            (r.sheetId || attendanceSheets[0]?.id) === sheet.id &&
-            r.date === getToday()
-        ).length;
-
-        const row = document.createElement("div");
-        row.className = "sheet-row";
-
-        const info = document.createElement("div");
-        const strong = document.createElement("strong");
-        strong.textContent = sheet.name;
-        const small = document.createElement("small");
-        small.textContent = new Date(sheet.createdAt).toLocaleDateString([], {
-            year:"numeric", month:"long", day:"numeric"
-        }) + " • " + count + " record" + (count === 1 ? "" : "s") + " today";
-        info.appendChild(strong);
-        info.appendChild(small);
-
-        const button = document.createElement("button");
-        button.className = "btn " + (sheet.id === activeSheetId ? "success-btn" : "primary-btn");
-        button.textContent = sheet.id === activeSheetId ? "✓ Active" : "Open";
-        button.onclick = async function() {
-            activeSheetId = sheet.id;
-            saveAttendanceSheets();
-            updateActiveSheetUI();
-            displayAttendance();
-            updatePendingCount();
-            closeAttendanceRecords();
-            if (navigator.onLine) await loadCentralState(true);
-            showMessage('Attendance sheet "' + sheet.name + '" is now active.', "info");
-        };
-
-        const actions = document.createElement("div");
-        actions.appendChild(button);
-        row.appendChild(info);
-        row.appendChild(actions);
-        list.appendChild(row);
-    });
-};
-
-/* Centralized save. The server decides the final record state under a lock. */
-syncSingleRecord = async function(record) {
-    if (!record || record.synced === true) return true;
-    if (!navigator.onLine) return false;
-
-    try {
-        const result = await centralFetch("SAVE_ATTENDANCE", {
-            studentId: record.studentId,
-            action: record.timeOut ? "TIME OUT" : "TIME IN",
-            date: record.date,
-            timeIn: record.timeIn || "",
-            timeOut: record.timeOut || "",
-            remark: record.remark || "",
-            status: record.status || "",
-            eventId: record.sheetId || activeSheetId,
-            eventName: record.sheetName || getActiveSheet().name,
-            deviceId: CENTRAL_DEVICE_ID
-        });
-
-        const saved = result.record;
-        const key = centralRecordKey(saved);
-        const index = attendanceRecords.findIndex(r => centralRecordKey(r) === key);
-        if (index >= 0) attendanceRecords[index] = Object.assign({}, saved, { synced: true });
-        else attendanceRecords.push(Object.assign({}, saved, { synced: true }));
-
-        saveRecords();
-        displayAttendance();
-        updatePendingCount();
-        centralLastStateHash = "";
-        return true;
-    } catch (error) {
-        console.warn("Central synchronization failed:", error);
-        return false;
-    }
-};
-
-/* Process against the central record first, preventing two devices from
-   independently deciding that the same student has not yet attended. */
-processStudent = async function(studentId) {
-    studentId = String(studentId || "").trim();
-    if (!studentId || isProcessing) return;
+    studentId = studentId.trim();
+
+    // Prevent duplicate triggers within 2 seconds
+    const now = Date.now();
+    if (lastScannedCode === studentId && (now - lastScanTime) < 2000) return;
+    lastScannedCode = studentId;
+    lastScanTime = now;
+
+    if (isProcessing) return;
     isProcessing = true;
 
     try {
-        if (navigator.onLine) await loadCentralState(true);
-
         const today = getToday();
-        const sheet = getActiveSheet();
-        let record = attendanceRecords.find(r =>
-            String(r.studentId).trim().toUpperCase() === studentId.toUpperCase() &&
-            r.date === today &&
-            (r.sheetId || attendanceSheets[0]?.id) === sheet.id
-        );
-
         const currentTime = getCurrentTime();
 
+        let record = attendanceRecords.find(r => 
+            r.studentId === studentId && 
+            r.date === today && 
+            (r.sheetId || attendanceSheets[0].id) === activeSheetId
+        );
+
+        /* --- TIME IN MODE --- */
         if (attendanceMode === "TIME IN") {
-            if (record && record.timeIn && record.timeOut) {
+            if (record && record.status === "COMPLETED") {
                 playErrorSound();
                 showStudentInfo(studentId, "Attendance already completed.");
-                showMessage("Attendance already completed for today on this shared sheet.", "info");
+                showMessage("Attendance already completed for today.", "info");
+                isProcessing = false;
                 return;
             }
 
-            if (!record) {
+            if (record && record.status === "INCOMPLETE") {
+                record.timeIn = currentTime;
+                record.remark = "";
+                record.status = record.timeOut ? "COMPLETED" : "PRESENT";
+                record.synced = false;
+            } else if (!record) {
                 record = {
-                    studentId,
-                    sheetId: sheet.id,
-                    sheetName: sheet.name,
+                    studentId: studentId,
+                    sheetId: activeSheetId,
+                    sheetName: getActiveSheet().name,
                     date: today,
                     timeIn: currentTime,
                     timeOut: "",
@@ -3069,89 +716,284 @@ processStudent = async function(studentId) {
                     synced: false
                 };
                 attendanceRecords.push(record);
-            } else {
-                record.sheetId = sheet.id;
-                record.sheetName = sheet.name;
-                record.timeIn = record.timeIn || currentTime;
-                record.remark = "";
-                record.status = record.timeOut ? "COMPLETED" : "PRESENT";
-                record.synced = false;
             }
-        } else {
-            if (!record) {
-                record = {
-                    studentId,
-                    sheetId: sheet.id,
-                    sheetName: sheet.name,
-                    date: today,
-                    timeIn: "",
-                    timeOut: currentTime,
-                    remark: "NO TIME IN",
-                    status: "INCOMPLETE",
-                    synced: false
-                };
-                attendanceRecords.push(record);
-            } else if (record.timeOut) {
+
+            saveRecords();
+            displayAttendance();
+            playScannerBeep();
+            showStudentInfo(studentId, "Time In recorded at " + record.timeIn + " — " + record.status);
+            showMessage("Time In saved locally.", "success");
+            syncSingleRecord(record);
+        }
+
+        /* --- TIME OUT MODE --- */
+        else if (attendanceMode === "TIME OUT") {
+            if (!record || !record.timeIn) {
+                if (!record) {
+                    record = {
+                        studentId: studentId,
+                        sheetId: activeSheetId,
+                        sheetName: getActiveSheet().name,
+                        date: today,
+                        timeIn: "",
+                        timeOut: currentTime,
+                        remark: "NO TIME IN",
+                        status: "INCOMPLETE",
+                        synced: false
+                    };
+                    attendanceRecords.push(record);
+                } else {
+                    record.timeOut = currentTime;
+                    record.remark = "NO TIME IN";
+                    record.status = "INCOMPLETE";
+                    record.synced = false;
+                }
+
+                saveRecords();
+                displayAttendance();
+                showStudentInfo(studentId, "Time Out recorded at " + record.timeOut + " — NO TIME IN");
+                showMessage("Time Out saved locally — NO TIME IN — INCOMPLETE.", "info");
+                syncSingleRecord(record);
+            } else if (record.status === "COMPLETED") {
                 playErrorSound();
-                showStudentInfo(studentId, "Attendance already has Time Out.");
-                showMessage("Time Out already recorded on this shared sheet.", "info");
-                return;
+                showStudentInfo(studentId, "Attendance already completed.");
+                showMessage("Attendance already completed for today.", "info");
             } else {
                 record.timeOut = currentTime;
-                record.status = record.timeIn ? "COMPLETED" : "INCOMPLETE";
-                record.remark = record.timeIn ? "" : "NO TIME IN";
+                record.status = "COMPLETED";
+                record.remark = "";
                 record.synced = false;
+
+                saveRecords();
+                displayAttendance();
+                playScannerBeep();
+                showStudentInfo(studentId, "Time Out recorded at " + record.timeOut + " — COMPLETED");
+                showMessage("Time Out saved locally.", "success");
+                syncSingleRecord(record);
             }
         }
-
-        saveRecords();
-        displayAttendance();
-        playScannerBeep();
-        showStudentInfo(studentId, attendanceMode + " recorded at " + currentTime + " — " + record.status);
-        showMessage(attendanceMode + " saved. Synchronizing with all devices…", "success");
-
-        const success = await syncSingleRecord(record);
-        if (success) {
-            await loadCentralState(true);
-            showMessage(attendanceMode + " synchronized to the central sheet.", "success");
-        } else {
-            showMessage(attendanceMode + " saved locally and will retry when online.", "info");
-        }
-    } catch (error) {
-        console.error("Central process error:", error);
-        showMessage("Attendance could not be processed.", "error");
+    } catch (e) {
+        console.error("Processing error:", e);
     } finally {
         isProcessing = false;
     }
-};
-
-/* Poll the central database so another device's scan appears automatically. */
-function startCentralPolling() {
-    if (centralPollTimer) clearInterval(centralPollTimer);
-    centralPollTimer = setInterval(function() {
-        if (navigator.onLine) loadCentralState(true);
-    }, CENTRAL_POLL_INTERVAL);
 }
 
-window.addEventListener("online", function() {
-    loadCentralState(false);
-    syncOfflineRecords();
+/* =====================================================
+   GOOGLE SHEETS SYNC
+===================================================== */
+async function syncSingleRecord(record) {
+    if (!navigator.onLine || !SCRIPT_URL) return;
+
+    try {
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(record)
+        });
+        record.synced = true;
+        saveRecords();
+        displayAttendance();
+    } catch (err) {
+        console.error("Sync error:", err);
+    }
+}
+
+async function syncOfflineRecords() {
+    if (isSyncing || !navigator.onLine) return;
+    const unsynced = attendanceRecords.filter(r => !r.synced);
+    if (unsynced.length === 0) return;
+
+    isSyncing = true;
+    for (let rec of unsynced) {
+        await syncSingleRecord(rec);
+    }
+    isSyncing = false;
+}
+
+/* =====================================================
+   UI RENDERING & DISPLAY
+===================================================== */
+function displayAttendance() {
+    const tbody = document.getElementById("attendanceTable");
+    const searchVal = document.getElementById("searchInput").value.toLowerCase();
+    const today = getToday();
+
+    const currentRecords = attendanceRecords.filter(r => 
+        (r.sheetId || attendanceSheets[0].id) === activeSheetId && r.date === today
+    );
+
+    // Update Counters
+    document.getElementById("totalStudents").textContent = currentRecords.length;
+    document.getElementById("timeInCount").textContent = currentRecords.filter(r => r.timeIn).length;
+    document.getElementById("timeOutCount").textContent = currentRecords.filter(r => r.timeOut).length;
+    document.getElementById("pendingCount").textContent = currentRecords.filter(r => !r.synced).length;
+
+    const filtered = currentRecords.filter(r => r.studentId.toLowerCase().includes(searchVal));
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No attendance records found for today.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map((r, index) => {
+        let statusClass = "present";
+        if (r.status === "COMPLETED") statusClass = "completed";
+        if (r.remark === "NO TIME IN") statusClass = "no-time-in";
+
+        let syncBadge = r.synced 
+            ? `<span class="status-badge synced">Synced</span>` 
+            : `<span class="status-badge pending">Pending</span>`;
+
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${r.studentId}</strong></td>
+                <td>${r.date}</td>
+                <td>${r.timeIn || "--:--"}</td>
+                <td>${r.timeOut || "--:--"}</td>
+                <td>${r.remark || "None"}</td>
+                <td><span class="status-badge ${statusClass}">${r.status}</span></td>
+                <td>${syncBadge}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+/* =====================================================
+   CSV EXPORT & CLEARING
+===================================================== */
+function exportCSV() {
+    const sheet = getActiveSheet();
+    const currentRecords = attendanceRecords.filter(r => (r.sheetId || attendanceSheets[0].id) === activeSheetId);
+    
+    if (currentRecords.length === 0) {
+        alert("No records to export.");
+        return;
+    }
+
+    let csv = "Student ID,Sheet Name,Date,Time In,Time Out,Remark,Status,Synced\n";
+    currentRecords.forEach(r => {
+        csv += `"${r.studentId}","${sheet.name}","${r.date}","${r.timeIn}","${r.timeOut}","${r.remark}","${r.status}","${r.synced}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${sheet.name.replace(/\s+/g, '_')}_Attendance.csv`;
+    a.click();
+}
+
+function clearAttendance() {
+    if (confirm("Are you sure you want to clear today's local records for this sheet?")) {
+        const today = getToday();
+        attendanceRecords = attendanceRecords.filter(r => 
+            !((r.sheetId || attendanceSheets[0].id) === activeSheetId && r.date === today)
+        );
+        saveRecords();
+        displayAttendance();
+        showMessage("Today's local records cleared.", "info");
+    }
+}
+
+/* =====================================================
+   SHEETS & MODALS MANAGEMENT
+===================================================== */
+function toggleMainMenu() {
+    document.getElementById("mainMenu").classList.toggle("open");
+}
+function closeMainMenu() {
+    document.getElementById("mainMenu").classList.remove("open");
+}
+
+function openNewAttendanceSheet() {
+    document.getElementById("newSheetPanel").classList.add("open");
+}
+function closeNewAttendanceSheet(e) {
+    if (!e || e.target.id === "newSheetPanel" || !e.target.closest) {
+        document.getElementById("newSheetPanel").classList.remove("open");
+    }
+}
+
+function createNewAttendanceSheet() {
+    const nameInput = document.getElementById("eventNameInput");
+    const name = nameInput.value.trim();
+    if (!name) return alert("Please enter an event name.");
+
+    const newSheet = {
+        id: "sheet-" + Date.now(),
+        name: name,
+        createdAt: new Date().toISOString()
+    };
+
+    attendanceSheets.push(newSheet);
+    activeSheetId = newSheet.id;
+    saveAttendanceSheets();
+    updateActiveSheetUI();
+    displayAttendance();
+
+    nameInput.value = "";
+    closeNewAttendanceSheet();
+    showMessage("New attendance sheet created!", "success");
+}
+
+function openAttendanceRecords() {
+    const listEl = document.getElementById("sheetList");
+    listEl.innerHTML = attendanceSheets.map(s => `
+        <div class="sheet-row">
+            <div>
+                <strong>${s.name}</strong>
+                <small>Created: ${new Date(s.createdAt).toLocaleDateString()}</small>
+            </div>
+            <button class="btn primary-btn" onclick="switchSheet('${s.id}')">
+                ${s.id === activeSheetId ? 'Active' : 'Select'}
+            </button>
+        </div>
+    `).join('');
+    document.getElementById("recordsPanel").classList.add("open");
+}
+
+function closeAttendanceRecords(e) {
+    if (!e || e.target.id === "recordsPanel" || !e.target.closest) {
+        document.getElementById("recordsPanel").classList.remove("open");
+    }
+}
+
+function switchSheet(id) {
+    activeSheetId = id;
+    saveAttendanceSheets();
+    updateActiveSheetUI();
+    displayAttendance();
+    closeAttendanceRecords();
+    showMessage("Switched attendance sheet.", "info");
+}
+
+/* =====================================================
+   INITIALIZE QR SCANNER
+===================================================== */
+window.addEventListener("load", () => {
+    updateActiveSheetUI();
+    updateConnectionStatus();
+    displayAttendance();
+
+    if (typeof Html5QrcodeScanner !== "undefined") {
+        const scanner = new Html5QrcodeScanner("reader", { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 } 
+        });
+        
+        scanner.render((decodedText) => {
+            processStudent(decodedText);
+        }, (error) => {
+            // Scanner read errors can be ignored safely
+        });
+    } else {
+        document.getElementById("scannerStatus").textContent = "Camera library failed to load or is offline.";
+    }
 });
 
-window.addEventListener("focus", function() {
-    if (navigator.onLine) loadCentralState(true);
-});
-
-window.addEventListener("pageshow", function() {
-    if (navigator.onLine) loadCentralState(true);
-});
-
-document.addEventListener("visibilitychange", function() {
-    if (!document.hidden && navigator.onLine) loadCentralState(true);
-});
-
-/* Initial shared-state load. */
-loadCentralState(false).then(startCentralPolling).catch(startCentralPolling);
 </script>
 </body>
 </html>
